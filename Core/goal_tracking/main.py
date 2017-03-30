@@ -87,7 +87,6 @@ while True:
 			cv2.line(img,(320,480),(320,380),(0,0,255),2)
 			cv2.imshow('image', img)
 			
-			is_close = 240 - cent_y
 			if (robot_y - cent_y) < 50:
 				in_mm = pc.distance_to_camera(marker[1][0])
 				if debug == True:
