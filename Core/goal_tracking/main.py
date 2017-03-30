@@ -242,6 +242,19 @@ while True:
 
 		img = cv2.imread('../tools/saved_images/opencv_image_8.png')
 		cv2.imshow('image', img)
+
+		k = cv2.waitKey(1)
+		
+		if k%256 == 27:
+			#ESC PRESSED
+			motors.driveMotors(0,0)
+			vs.stop()
+			print("\n")
+			print("------------------------------")
+			print("Escape hit, closing .....")
+			print("------------------------------")
+			print("\n")
+			sys.exit()
 	
 cv2.destroyAllWindows()
 vs.stop()
