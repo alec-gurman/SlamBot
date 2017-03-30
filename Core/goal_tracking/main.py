@@ -15,10 +15,12 @@ import camera_setup as cam
 import distance_calibrate as distcal
 from camera_setup import PiVideoStream
 
+#initialize the robot
+
 motors.init() #setup the motors
-vs = PiVideoStream().start()
+vs = PiVideoStream().start() #start the video stream on a seperate thread
 time.sleep(2.0) #allow camera to warm up
-pc = distcal.pixelCalibrate(1200,90)
+pc = distcal.pixelCalibrate(1200,90) #calibrate the camera for distances
 
 #GLOBALS
 
@@ -26,15 +28,18 @@ mainP = 0.5
 mainI = 0
 mainD = 0
 
-pid_angle = pid.pidcontrol(mainP,mainI,mainD)
-
 robot_speed = 40 #max 100
 disable = False #disable motors for debugging 	
 debug = True
-show_fps = True
 travel_distance = 0
-frames = 0
-initial_t = time.time()
+robot_y = 240
+robot_x = 160
+
+#Create the PID object
+
+pid_angle = pid.pidcontrol(mainP,mainI,mainD)
+
+#start the state selector
 
 print("\n")
 print("Which state do you want to run?")
@@ -46,15 +51,6 @@ print("Running state: {}".format(state))
 state_machine = 1
 
 while True:
-	
-	if show_fps == True:	
-		frames += 1
-		current_t = time.time()
-		if (current_t - initial_t) > 1:
-			fps = frames
-			print("fps: {}".format(fps))
-			initial_t = time.time()
-			frames = 0
 				
 	if state == 1:
 		if state_machine == 1:
@@ -62,7 +58,7 @@ while True:
 			#img = cv2.imread('saved_images/opencv_image_3.png')
 			
 			detectYellow = blob.get_blob('yellow', img)
-			cent_x, cent_y, heading_angle, marker, area = detectYellow.getFeatures(160,240)
+			cent_x, cent_y, heading_angle, marker, area = detectYellow.getFeatures(robot_x,robot_y)
 			
 			pid_return = (pid_angle.update(heading_angle))
 			pid_wheel = int(robot_speed - abs(pid_return))
@@ -92,7 +88,7 @@ while True:
 			cv2.imshow('image', img)
 			
 			is_close = 240 - cent_y
-			if is_close < 50:
+			if (robot_y - cent_y) < 50:
 				in_mm = pc.distance_to_camera(marker[1][0])
 				if debug == True:
 					cv2.putText(img, 'DISTANCE: {}'.format(in_mm), (50,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
