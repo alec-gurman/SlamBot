@@ -13,7 +13,7 @@ class pixelCalibrate(object):
 
 		self.KNOWN_DISTANCE = knownDistance
 		self.KNOWN_WIDTH = knownWidth
-		self.image_path = 'calibration/opencv_image_0.png'	
+		self.image_path = 'tools/calibration/opencv_image_0.png'	
 		image_calibrate = cv2.imread(self.image_path)
 		detectYellow = blob.get_blob('yellow', image_calibrate)
 		c_marker = detectYellow.find_marker()	
