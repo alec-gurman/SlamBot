@@ -235,6 +235,13 @@ while True:
 			print("------------------------------")
 			print("\n")
 			sys.exit()
+
+	if state == 3:
+
+		#marker tracking code goes here
+
+		img = cv2.imread('../tools/saved_images/opencv_image_8.png')
+		cv2.imshow('image', img)
 	
 cv2.destroyAllWindows()
 vs.stop()
