@@ -66,15 +66,19 @@ while True:
 			detectRed = blob.get_blob('red', img)
 			r_cent_x, r_cent_y, r_heading_angle, r_marker, r_area = detectRed.getFeatures(160,240)
 			
-			if ((y_area > 500) and (r_area > 500)) or ((y_area < 500) and (r_area > 500)):
+			if (y_area > 0) and (r_area > 500):
 				state = 2
-			elif (y_area > 500) and (r_area < 500):
+			elif (y_area > 0) and (r_area < 500):
 				state_machine = 2
-			elif (y_area < 500) and (r_area < 500):
+			elif (y_area < 0):
 				if disable == True:
 					motors.driveMotors(0,0)
 				else:
 					motors.driveMotors(40,-40)
+					
+			if debug == True:
+				detectYellow.drawFeatures()
+				detectRed.drawFeatures()
 
 			cv2.imshow('image', img)
 
@@ -90,10 +94,10 @@ while True:
 			r_cent_x, r_cent_y, r_heading_angle, r_marker, r_area = detectRed.getFeatures(160,240)
 
 
-			if(r_area > 500): #if in tracking yellow mode and a red obstacle appears, deal with it
+			if (r_area > 500): #if in tracking yellow mode and a red obstacle appears, deal with it
 				state_machine = 1
 
-			pid_return = (pid_angle.update(heading_angle))
+			pid_return = (pid_angle.update(y_heading_angle))
 			pid_wheel = int(robot_speed - abs(pid_return))
 			
 			if debug == True:
@@ -102,21 +106,21 @@ while True:
 				cv2.putText(img, 'PID OUT: {}'.format(pid_return), (50,460), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 				cv2.putText(img, 'PID WHEELS: {}'.format(pid_wheel), (50,430), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 			
-			if heading_angle <= 180:
+			if y_heading_angle <= 180:
 				if disable == True:
 					motors.driveMotors(0,0)
 				else:
 					motors.driveMotors(pid_wheel, robot_speed)
-			if heading_angle > 180:	
+			if y_heading_angle > 180:	
 				if disable == True:
 					motors.driveMotors(0,0)
 				else:
 					motors.driveMotors(robot_speed,pid_wheel)
-			if heading_angle == 0:
+			if y_heading_angle == 0:
 				state_machine = 1
 			
 			if (robot_y - y_cent_y) < 50: #if we get close enough to the yellow goal
-				in_mm = pc.distance_to_camera(marker[1][0])
+				in_mm = pc.distance_to_camera(y_marker[1][0])
 				if debug == True:
 					cv2.putText(img, 'DISTANCE: {}'.format(in_mm), (50,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 				motors.driveMotors(0,0)
@@ -211,14 +215,14 @@ while True:
 			state_machine = 4
 
 		if state_machine == 4:
-			if (r_area < 500) and (y_area < 500):
+			if (r_area < 500) and (y_area < 200):
 				motors.driveMotors(-robot_speed, robot_speed)
-			elif (r_area > 500) and (y_area > 500):
+			elif (r_area > 500) and (y_area > 200):
 				state_machine = 2
-			elif (r_area < 500) and (y_area > 250):
+			elif (r_area < 500) and (y_area > 200):
 				state = 1
 				state_machine = 1 #restore the state machine variable
-			elif (r_area > 500) and (y_area < 500):
+			elif (r_area > 500) and (y_area < 200):
 				state_machine = 2
 			
 		cv2.imshow('image', img)
@@ -240,7 +244,7 @@ while True:
 
 		#marker tracking code goes here
 
-		img = cv2.imread('../tools/saved_images/opencv_image_8.png')
+		img = vs.read()
 		cv2.imshow('image', img)
 
 		k = cv2.waitKey(1)
