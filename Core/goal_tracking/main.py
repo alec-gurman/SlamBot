@@ -244,7 +244,9 @@ while True:
 
 		#marker tracking code goes here
 
-		img = vs.read()
+		#img = vs.read()
+		img = cv2.imread('../tools/saved_images/opencv_image_10.png')
+		
 		cv2.imshow('image', img)
 
 		k = cv2.waitKey(1)
