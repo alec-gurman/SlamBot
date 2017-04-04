@@ -18,7 +18,10 @@ class get_blob(object):
 		self.upper_red_first = np.array([15,255,255]) #color threshold upper value	
 		self.lower_red_second = np.array([170,115,240])
 		self.upper_red_second = np.array([180,255,255])
+		self.lower_green = np.array([28,75,100])
+		self.upper_green = np.array([44,255,255])
 		self.hsv_img = cv2.cvtColor(self.image,cv2.COLOR_BGR2HSV) #convert to HSV
+		
 		if color == 'yellow':
 			self.lower = self.lower_yellow
 			self.upper = self.upper_yellow
@@ -31,7 +34,11 @@ class get_blob(object):
 			self.mask_first = cv2.inRange(self.hsv_img, self.lower, self.upper)
 			self.mask_second = cv2.inRange(self.hsv_img, self.lower_additional, self.upper_additional)
 			self.mask = cv2.bitwise_or(self.mask_first, self.mask_second)
-			
+		if color == 'green':
+			self.lower = self.lower_green
+			self.upper = self.upper_green
+			self.mask = cv2.inRange(self.hsv_img,self.lower,self.upper)
+
 		self.largest_area = 0
 		self.cx = 0
 		self.cy = 0
