@@ -244,8 +244,8 @@ while True:
 
 		#marker tracking code goes here
 
-		#img = vs.read()
-		img = cv2.imread('../tools/saved_images/opencv_image_10.png')
+		img = vs.read()
+		#img = cv2.imread('../tools/saved_images/opencv_image_10.png')
 
 		detectYellow = blob.get_blob('yellow', img)
 		y_cent_x, y_cent_y, y_heading_angle, y_marker, y_area = detectYellow.getFeatures(160,240)
@@ -253,10 +253,14 @@ while True:
 		detectRed = blob.get_blob('red', img)
 		r_cent_x, r_cent_y, r_heading_angle, r_marker, r_area = detectRed.getFeatures(160,240)	
 		
+		detectGreen = blob.get_blob('green', img)
+		g_cent_x, g_cent_y, g_heading_angle, g_marker, g_area = detectGreen.getFeatures(160,240)	
+
 		if debug == True:
 					
 			detectRed.drawFeatures()
 			detectYellow.drawFeatures()
+			detectGreen.drawFeatures()
 
 		cv2.imshow('image', img)
 
