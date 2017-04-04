@@ -14,12 +14,14 @@ class get_blob(object):
 		self.image = image
 		self.lower_yellow = np.array([23,150,200]) #color threshold lower value
 		self.upper_yellow = np.array([40,255,255]) #color threshold upper value
-		self.lower_red_first = np.array([0,115,240]) #color threshold lower value
+		self.lower_red_first = np.array([0,115,120]) #color threshold lower value
 		self.upper_red_first = np.array([15,255,255]) #color threshold upper value	
-		self.lower_red_second = np.array([170,115,240])
+		self.lower_red_second = np.array([170,115,120])
 		self.upper_red_second = np.array([180,255,255])
-		self.lower_green = np.array([28,75,100])
-		self.upper_green = np.array([44,255,255])
+		self.lower_green = np.array([35,100,65])
+		self.upper_green = np.array([55,255,255])
+		self.lower_blue = np.array([105,100,100])
+		self.upper_blue = np.array([135,255,255])
 		self.hsv_img = cv2.cvtColor(self.image,cv2.COLOR_BGR2HSV) #convert to HSV
 		
 		if color == 'yellow':
@@ -37,6 +39,10 @@ class get_blob(object):
 		if color == 'green':
 			self.lower = self.lower_green
 			self.upper = self.upper_green
+			self.mask = cv2.inRange(self.hsv_img,self.lower,self.upper)
+		if color == 'blue':
+			self.lower = self.lower_blue
+			self.upper = self.upper_blue
 			self.mask = cv2.inRange(self.hsv_img,self.lower,self.upper)
 
 		self.largest_area = 0
@@ -74,7 +80,7 @@ class get_blob(object):
 		self.multiple_contours = []
 		for cnts in contours:
 			self.area = cv2.contourArea(cnts)
-			if self.area > 0:
+			if self.area > 50:
 				current_contour = []
 				self.x,self.y,self.w,self.h = cv2.boundingRect(cnts)
 				M = cv2.moments(cnts)
@@ -95,7 +101,7 @@ class get_blob(object):
 				current_contour.append(self.h)
 				current_contour.append(self.area_rect)
 				current_contour.append(self.goal_angle)
-				self.multiple_contours.append(self.current_contour)
+				self.multiple_contours.append(current_contour)
 						
 		return self.multiple_contours
 	
@@ -108,6 +114,13 @@ class get_blob(object):
 			cv2.rectangle(self.image,(self.x,self.y), (self.x+self.w,self.y+self.h), (0,255,0),2)
 			cv2.circle(self.image,(self.cx,self.cy),2,(255,0,0),5)
 			cv2.line(self.image,(320,480),(self.cx,self.cy),(255,0,0),2)
+			
+	def drawMultipleFeatures(self, array):
+		
+			for blobs in array:
+				cv2.rectangle(self.image,(blobs[3],blobs[4]), (blobs[3]+blobs[5],blobs[4]+blobs[6]), (0,255,0),2)
+				cv2.circle(self.image,(blobs[1],blobs[2]),2,(255,0,0),5)
+				cv2.line(self.image,(320,480),(blobs[1],blobs[2]),(255,0,0),2)
 	
 	def find_marker(self):
 		
