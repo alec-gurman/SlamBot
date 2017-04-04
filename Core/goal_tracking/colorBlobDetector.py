@@ -69,6 +69,36 @@ class get_blob(object):
 			
 		return (self.cx, self.cy, self.goal_angle, self.area_rect, self.largest_area)
 	
+	def getMultipleFeatures(self, robot_x, robot_y):
+		_, contours, _ = cv2.findContours(self.mask, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+		self.multiple_contours = []
+		for cnts in contours:
+			self.area = cv2.contourArea(cnts)
+			if self.area > 0:
+				current_contour = []
+				self.x,self.y,self.w,self.h = cv2.boundingRect(cnts)
+				M = cv2.moments(cnts)
+				self.cx = int(M['m10']/M['m00'])
+				self.cy = int(M['m01']/M['m00'])
+				self.area_rect = cv2.minAreaRect(cnts)
+				if self.cx > 0 and self.cy > 0:
+					goal_rad = np.arctan2(self.cy - robot_y, self.cx - robot_x)
+					self.goal_angle = containAngle360(np.degrees(goal_rad))
+				else:
+					self.goal_angle = 0
+				current_contour.append(self.area)
+				current_contour.append(self.cx)
+				current_contour.append(self.cy)
+				current_contour.append(self.x)
+				current_contour.append(self.y)
+				current_contour.append(self.w)
+				current_contour.append(self.h)
+				current_contour.append(self.area_rect)
+				current_contour.append(self.goal_angle)
+				self.multiple_contours.append(self.current_contour)
+						
+		return self.multiple_contours
+	
 	def drawFeatures(self):
 		
 		if self.cx > 0 and self.cy > 0:

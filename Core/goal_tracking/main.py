@@ -254,14 +254,18 @@ while True:
 		r_cent_x, r_cent_y, r_heading_angle, r_marker, r_area = detectRed.getFeatures(160,240)	
 		
 		detectGreen = blob.get_blob('green', img)
-		g_cent_x, g_cent_y, g_heading_angle, g_marker, g_area = detectGreen.getFeatures(160,240)	
+		green_blobs = []
+		green_blobs = detectGreen.getMultipleFeatures(160,240)	
 
 		if debug == True:
 					
-			detectRed.drawFeatures()
-			detectYellow.drawFeatures()
-			detectGreen.drawFeatures()
-
+			#detectRed.drawFeatures()
+			#detectYellow.drawFeatures()
+			for blobs in green_blobs:
+				cv2.rectangle(img,(blobs[3],blobs[4]), (blobs[3]+blobs[5],blobs[4]+blobs[6]), (0,255,0),2)
+				cv2.circle(img,(blobs[1],blobs[2]),2,(255,0,0),5)
+				cv2.line(img,(320,480),(blobs[1],blobs[2]),(255,0,0),2)
+				
 		cv2.imshow('image', img)
 
 		k = cv2.waitKey(1)
