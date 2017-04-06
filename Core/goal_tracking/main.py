@@ -24,7 +24,7 @@ from camera_setup import PiVideoStream
 motors.init() #setup the motors
 vs = PiVideoStream().start() #start the video stream on a seperate thread
 time.sleep(2.0) #allow camera to warm up
-pc = distcal.pixelCalibrate(1000,90) #calibrate the camera for distances
+pc = distcal.pixelCalibrate(1200,90) #calibrate the camera for distances
 
 #GLOBALS
 
@@ -135,8 +135,9 @@ while True:
 			if y_heading_angle == 0:
 				state_machine = 1
 			
-			if (robot_y - y_cent_y) < 50: #if we get close enough to the yellow goal
+			if (robot_y - y_cent_y) < 70: #if we get close enough to the yellow goal
 				in_mm = pc.distance_to_camera(y_marker[1][0])
+				print(in_mm)
 				if debug == True:
 					cv2.putText(img, 'DISTANCE: {}'.format(in_mm), (50,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 				motors.driveMotors(0,0)
@@ -465,7 +466,7 @@ while True:
 				else:
 					motors.driveMotors(robot_speed,pid_wheel)
 			
-			if landmark_area > 1200: #if we get close enough to the yellow goal
+			if landmark_area > 1500: #if we get close enough to the yellow goal
 				print("close enough to goal")
 				in_mm = pc.distance_to_camera(landmark_marker[1][0])
 				print(in_mm)
@@ -473,10 +474,10 @@ while True:
 					cv2.putText(img, 'DISTANCE: {}'.format(in_mm), (50,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 				motors.driveMotors(0,0)
 				time.sleep(0.5)
-				if in_mm > 200:
-					travel_distance = (in_mm - 200)
+				if (in_mm / 2) > 200:
+					travel_distance = ((in_mm / 2) - 200)
 				else:
-					travel_distance = in_mm
+					travel_distance = 1
 				state_machine = 3
 				vs.stop()
 			else:
