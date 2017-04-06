@@ -141,7 +141,11 @@ while True:
 					cv2.putText(img, 'DISTANCE: {}'.format(in_mm), (50,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 				motors.driveMotors(0,0)
 				time.sleep(0.5)
-				travel_distance = in_mm
+				#check if the remaining distance to object is more than 20cm
+				if in_mm > 200:
+					travel_distance = (in_mm - 200) 
+				else:
+					travel_distance = 1
 				state_machine = 3
 				vs.stop()
 
@@ -452,11 +456,11 @@ while True:
 				if debug == True:
 					cv2.putText(img, 'DISTANCE: {}'.format(in_mm), (50,400), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 				motors.driveMotors(0,0)
-				sys.exit()
 				time.sleep(0.5)
-				travel_distance = (in_mm - 200)
-				if travel_distance < 0:
-					travel_distance = 0
+				if in_mm > 200:
+					travel_distance = (in_mm - 200)
+				else:
+					travel_distance = 1
 				state_machine = 3
 				vs.stop()
 			else:
