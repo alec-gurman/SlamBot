@@ -372,9 +372,9 @@ while True:
 								
 		if debug == True:
 				
-			detectGreen.drawMultipleFeatures(green_blobs)
-			detectRed.drawMultipleFeatures(red_blobs)
-			detectBlue.drawMultipleFeatures(blue_blobs)
+			#detectGreen.drawMultipleFeatures(green_blobs)
+			#detectRed.drawMultipleFeatures(red_blobs)
+			#detectBlue.drawMultipleFeatures(blue_blobs)
 			cv2.putText(img, 'Landmark 1: {}, {}'.format(landmark1_cx, landmark1_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 			cv2.putText(img, 'Landmark 2: {}, {}'.format(landmark2_cx, landmark2_cy), (50,80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 			cv2.putText(img, 'Landmark 3: {}, {}'.format(landmark3_cx, landmark3_cy), (50,110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
@@ -398,7 +398,7 @@ while True:
 					if disable == True:
 						motors.driveMotors(0,0)
 					else:
-						motors.driveMotors(40,-40)
+						motors.driveMotors(30,-30)
 			
 			if landmark_goal == 2:
 				if landmark2_cx > 0:
@@ -412,7 +412,7 @@ while True:
 					if disable == True:
 						motors.driveMotors(0,0)
 					else:
-						motors.driveMotors(40,-40)
+						motors.driveMotors(30,-30)
 					
 			if landmark_goal == 3:
 				if landmark3_cx > 0:
@@ -426,7 +426,7 @@ while True:
 					if disable == True:
 						motors.driveMotors(0,0)
 					else:
-						motors.driveMotors(40,-40)
+						motors.driveMotors(30,-30)
 
 		if state_machine == 2:
 			
@@ -449,7 +449,7 @@ while True:
 				else:
 					motors.driveMotors(robot_speed,pid_wheel)
 			
-			if landmark_area > 5000: #if we get close enough to the yellow goal
+			if landmark_area > 3000: #if we get close enough to the yellow goal
 				print("close enough to goal")
 				in_mm = pc.distance_to_camera(landmark_marker[1][0])
 				print(in_mm)
