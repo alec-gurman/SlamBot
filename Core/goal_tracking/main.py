@@ -24,7 +24,7 @@ from camera_setup import PiVideoStream
 motors.init() #setup the motors
 vs = PiVideoStream().start() #start the video stream on a seperate thread
 time.sleep(2.0) #allow camera to warm up
-pc = distcal.pixelCalibrate(1200,90) #calibrate the camera for distances
+pc = distcal.pixelCalibrate(1000,90) #calibrate the camera for distances
 
 #GLOBALS
 
@@ -372,9 +372,9 @@ while True:
 								
 		if debug == True:
 				
-			#detectGreen.drawMultipleFeatures(green_blobs)
-			#detectRed.drawMultipleFeatures(red_blobs)
-			#detectBlue.drawMultipleFeatures(blue_blobs)
+			detectGreen.drawMultipleFeatures(green_blobs)
+			detectRed.drawMultipleFeatures(red_blobs)
+			detectBlue.drawMultipleFeatures(blue_blobs)
 			cv2.putText(img, 'Landmark 1: {}, {}'.format(landmark1_cx, landmark1_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 			cv2.putText(img, 'Landmark 2: {}, {}'.format(landmark2_cx, landmark2_cy), (50,80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 			cv2.putText(img, 'Landmark 3: {}, {}'.format(landmark3_cx, landmark3_cy), (50,110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
@@ -383,6 +383,7 @@ while True:
 		landmark_cy = 0
 		landmark_marker = ((1,1), (1,1), 1)
 		landmark_area = 0
+		previous_found = False
 		
 		if state_machine == 1:
 						
@@ -393,12 +394,17 @@ while True:
 					landmark_cy = landmark1_cy
 					landmark_area = landmark1_area
 					landmark_marker = landmark1_marker
+					previous_found = True
 					#landmark_heading = landmark1_heading
 				else:
-					if disable == True:
-						motors.driveMotors(0,0)
+					if previous_found == True:
+						motors.driveMotors(-30,30)
+						previous_found = False
 					else:
-						motors.driveMotors(30,-30)
+						if disable == True:
+							motors.driveMotors(0,0)
+						else:
+							motors.driveMotors(30,-30)
 			
 			if landmark_goal == 2:
 				if landmark2_cx > 0:
@@ -407,12 +413,17 @@ while True:
 					landmark_cy = landmark2_cy
 					landmark_area = landmark2_area
 					landmark_marker = landmark2_marker
+					previous_found = True
 					#landmark_heading = landmark2_heading
 				else:
-					if disable == True:
-						motors.driveMotors(0,0)
+					if previous_found == True:
+						motors.driveMotors(-30,30)
+						previous_found = False
 					else:
-						motors.driveMotors(30,-30)
+						if disable == True:
+							motors.driveMotors(0,0)
+						else:
+							motors.driveMotors(30,-30)
 					
 			if landmark_goal == 3:
 				if landmark3_cx > 0:
@@ -421,12 +432,17 @@ while True:
 					landmark_cy = landmark3_cy
 					landmark_area = landmark3_area
 					landmark_marker = landmark3_marker
+					previous_found = True
 					#landmark_heading = landmark3_heading
 				else:
-					if disable == True:
-						motors.driveMotors(0,0)
+					if previous_found == True:
+						motors.driveMotors(-30,30)
+						previous_found = False
 					else:
-						motors.driveMotors(30,-30)
+						if disable == True:
+							motors.driveMotors(0,0)
+						else:
+							motors.driveMotors(30,-30)
 
 		if state_machine == 2:
 			
@@ -449,7 +465,7 @@ while True:
 				else:
 					motors.driveMotors(robot_speed,pid_wheel)
 			
-			if landmark_area > 3000: #if we get close enough to the yellow goal
+			if landmark_area > 1200: #if we get close enough to the yellow goal
 				print("close enough to goal")
 				in_mm = pc.distance_to_camera(landmark_marker[1][0])
 				print(in_mm)
@@ -460,7 +476,7 @@ while True:
 				if in_mm > 200:
 					travel_distance = (in_mm - 200)
 				else:
-					travel_distance = 1
+					travel_distance = in_mm
 				state_machine = 3
 				vs.stop()
 			else:

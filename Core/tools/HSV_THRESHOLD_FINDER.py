@@ -29,7 +29,7 @@ import cv2
 def nothing(x):
 	pass
 
-file_name = 'saved_images/opencv_image_0.png'
+file_name = 'saved_images/opencv_image_1.png'
 
 #define the image
 cv2.namedWindow('image')

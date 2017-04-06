@@ -14,14 +14,14 @@ class get_blob(object):
 		self.image = image
 		self.lower_yellow = np.array([23,150,200]) #color threshold lower value
 		self.upper_yellow = np.array([40,255,255]) #color threshold upper value
-		self.lower_red_first = np.array([0,115,120]) #color threshold lower value
+		self.lower_red_first = np.array([0,100,90]) #color threshold lower value
 		self.upper_red_first = np.array([15,255,255]) #color threshold upper value	
-		self.lower_red_second = np.array([170,115,120])
+		self.lower_red_second = np.array([170,100,90])
 		self.upper_red_second = np.array([180,255,255])
-		self.lower_green = np.array([35,100,65])
-		self.upper_green = np.array([55,255,255])
-		self.lower_blue = np.array([105,100,100])
-		self.upper_blue = np.array([135,255,255])
+		self.lower_green = np.array([30,120,60])
+		self.upper_green = np.array([50,255,255])
+		self.lower_blue = np.array([100,80,60])
+		self.upper_blue = np.array([140,255,255])
 		self.hsv_img = cv2.cvtColor(self.image,cv2.COLOR_BGR2HSV) #convert to HSV
 		
 		if color == 'yellow':
