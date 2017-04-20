@@ -3,7 +3,7 @@
 MAIN ROBOT DRIVING SCRIPT
 
 
-UPDATED 30 MARCH 12:00pm
+UPDATED 20 April 2:30pm
 
 '''
 
@@ -35,7 +35,8 @@ mainD = 0
 
 robot_speed = 40 #max 100
 disable = False #disable motors for debugging
-debug = True
+debug = True #show contour features?
+debug_images = True #enable imshow?
 
 travel_distance = 0
 robot_y = 240
@@ -98,7 +99,9 @@ while True:
 				detectYellow.drawFeatures()
 				detectRed.drawFeatures()
 
-			cv2.imshow('image', img)
+
+			if debug_images == True:
+				cv2.imshow('image', img)
 
 		if state_machine == 2:
 
@@ -152,7 +155,8 @@ while True:
 				state_machine = 3
 				vs.stop()
 
-			cv2.imshow('image', img)
+			if debug_images == True:
+				cv2.imshow('image', img)
 
 		if state_machine == 3:
 			initial_ticksA = motors.get_ticksA()
@@ -248,7 +252,8 @@ while True:
 			elif (r_area > 500) and (y_area < 200):
 				state_machine = 2
 
-		cv2.imshow('image', img)
+		if debug_images == True:
+			cv2.imshow('image', img)
 
 		k = cv2.waitKey(1)
 
@@ -284,98 +289,7 @@ while True:
 
 		get_landmark = find_landmark(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
 
-
-
-		#Check for Landmark 1 (red,green,blue) (from top to bottom)
-
-		landmark1_cx = 0
-		landmark1_cy = 0
-		landmark2_cx = 0
-		landmark2_cy = 0
-		landmark3_cx = 0
-		landmark3_cy = 0
-		landmark1_marker = ((1,1), (1,1) , 1)
-		landmark2_marker = ((1,1), (1,1) , 1)
-		landmark3_marker = ((1,1), (1,1) , 1)
-
-		if landmark_goal == 1:
-
-			landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.get_landmark_position(1)
-
-			highest_cy = 0 #max y value
-			highest_cx = 0
-
-			for r_blob in red_blobs:
-				highest_cy = r_blob[2]
-				highest_cx = r_blob[1]
-				for g_blob in green_blobs:
-					current_cy = g_blob[2]
-					current_cx = g_blob[1]
-					if current_cy > highest_cy:
-						if abs(current_cx - highest_cx) < 10:
-							middle_cy = current_cy
-							middle_cx = current_cx
-							for b_blob in blue_blobs:
-								current_cy = b_blob[2]
-								current_cx = b_blob[1]
-								if current_cy > middle_cy:
-									if abs(current_cx - middle_cx) < 10:
-										landmark1_cx = current_cx
-										landmark1_cy = current_cy
-										landmark1_area = b_blob[0]
-										landmark1_marker = b_blob[7]
-
-		if landmark_goal == 2:
-			#Check for Landmark 2 (green, red, green) (from top to bottom)
-
-			highest_cx = 0
-			highest_cy = 0
-
-			for g_blob in green_blobs:
-				highest_cy = g_blob[2]
-				highest_cx = g_blob[1]
-				for r_blob in red_blobs:
-					current_cy = r_blob[2]
-					current_cx = r_blob[1]
-					if current_cy > highest_cy:
-						if abs(current_cx - highest_cx) < 10:
-							middle_cy = current_cy
-							middle_cx = current_cx
-							for g_blob in green_blobs:
-								current_cy = g_blob[2]
-								current_cx = g_blob[1]
-								if current_cy > middle_cy:
-									if abs(current_cx - middle_cx) < 10:
-										landmark2_cx = middle_cx
-										landmark2_cy = middle_cy
-										landmark2_area = r_blob[0]
-										landmark2_marker = r_blob[7]
-
-		if landmark_goal == 3:
-			#Check for Landmark 3 (red, blue, red) (from top to bottom)
-
-			highest_cy = 0 #max y value
-			highest_cx = 0
-
-			for r_blob in red_blobs:
-				highest_cy = r_blob[2]
-				highest_cx = r_blob[1]
-				for b_blob in blue_blobs:
-					current_cy = b_blob[2]
-					current_cx = b_blob[1]
-					if current_cy > highest_cy:
-						if abs(current_cx - highest_cx) < 10:
-							middle_cy = current_cy
-							middle_cx = current_cx
-							for r_blob in red_blobs:
-								current_cy = r_blob[2]
-								current_cx = r_blob[1]
-								if current_cy > middle_cy:
-									if abs(current_cx - middle_cx) < 10:
-										landmark3_cx = middle_cx
-										landmark3_cy = middle_cy
-										landmark3_area = b_blob[0]
-										landmark3_marker = b_blob[7]
+		landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(landmark_goal)
 
 		if debug == True:
 
@@ -386,70 +300,23 @@ while True:
 			cv2.putText(img, 'Landmark 2: {}, {}'.format(landmark2_cx, landmark2_cy), (50,80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 			cv2.putText(img, 'Landmark 3: {}, {}'.format(landmark3_cx, landmark3_cy), (50,110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 
-		landmark_cx = 0
-		landmark_cy = 0
-		landmark_marker = ((1,1), (1,1), 1)
-		landmark_area = 0
 		previous_found = False
 
 		if state_machine == 1:
 
-			if landmark_goal == 1:
-				if landmark1_cx > 0:
-					state_machine = 2
-					landmark_cx = landmark1_cx
-					landmark_cy = landmark1_cy
-					landmark_area = landmark1_area
-					landmark_marker = landmark1_marker
-					previous_found = True
-					#landmark_heading = landmark1_heading
+			if landmark_cx > 0:
+				state_machine = 2
+				previous_found = True
+				#landmark_heading = landmark1_heading
+			else:
+				if previous_found == True:
+					motors.driveMotors(-30,30)
+					previous_found = False
 				else:
-					if previous_found == True:
-						motors.driveMotors(-30,30)
-						previous_found = False
+					if disable == True:
+						motors.driveMotors(0,0)
 					else:
-						if disable == True:
-							motors.driveMotors(0,0)
-						else:
-							motors.driveMotors(30,-30)
-
-			if landmark_goal == 2:
-				if landmark2_cx > 0:
-					state_machine = 2
-					landmark_cx = landmark2_cx
-					landmark_cy = landmark2_cy
-					landmark_area = landmark2_area
-					landmark_marker = landmark2_marker
-					previous_found = True
-					#landmark_heading = landmark2_heading
-				else:
-					if previous_found == True:
-						motors.driveMotors(-30,30)
-						previous_found = False
-					else:
-						if disable == True:
-							motors.driveMotors(0,0)
-						else:
-							motors.driveMotors(30,-30)
-
-			if landmark_goal == 3:
-				if landmark3_cx > 0:
-					state_machine = 2
-					landmark_cx = landmark3_cx
-					landmark_cy = landmark3_cy
-					landmark_area = landmark3_area
-					landmark_marker = landmark3_marker
-					previous_found = True
-					#landmark_heading = landmark3_heading
-				else:
-					if previous_found == True:
-						motors.driveMotors(-30,30)
-						previous_found = False
-					else:
-						if disable == True:
-							motors.driveMotors(0,0)
-						else:
-							motors.driveMotors(30,-30)
+						motors.driveMotors(30,-30)
 
 		if state_machine == 2:
 
@@ -489,7 +356,7 @@ while True:
 			else:
 				state_machine = 1
 
-			cv2.imshow('image', img)
+			#cv2.imshow('image', img)
 
 		if state_machine == 3:
 			print("in state machine 3")
@@ -510,7 +377,8 @@ while True:
 				time.sleep(0.1)
 				sys.exit()
 
-		cv2.imshow('image', img)
+		if debug_images == True:
+			cv2.imshow('image', img)
 
 		k = cv2.waitKey(1)
 

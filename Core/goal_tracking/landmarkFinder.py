@@ -12,7 +12,7 @@ class find_landmark(object):
         self.landmark_marker = ((1,1),(1,1),1)
 
 
-    def get_landmark_position(self, l_id):
+    def position(self, l_id):
 
         if l_id == 1:
             #pattern: (red, green, blue)
