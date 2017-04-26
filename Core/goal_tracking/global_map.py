@@ -34,19 +34,30 @@ mainP = 0.5
 mainI = 0
 mainD = 0
 
+FREQUENCY = 0.1 #10 Hz
 robot_speed = 40 #max 100
+ROBOT_V = 40 * 0.025 #convert our arbitary units to a simulation of m/s
+distance_travelled = ROBOT_V * FREQUENCY
+delta_theta = 0.0 #initialize the change in theta
+ROBOT_W = 0.0 #initialize angular velocity which will be updated by the pid
 disable = False #disable motors for debugging
 debug = True #show contour features?
 debug_images = True #enable imshow?
-
 travel_distance = 0
 robot_y = 240
 robot_x = 160
+ROBOT_GRAPH_X = 0.0
+ROBOT_GRAPH_Y = 0.0
+ROBOT_GRAPH_HEADING = 0.0
 state_machine = 1
 
 #Create the PID object
 
 pid_angle = pid.pidcontrol(mainP,mainI,mainD)
+
+x_axis = []
+y_axis = []
+heading_axis = []
 
 while True:
 
@@ -82,6 +93,9 @@ while True:
 
 		pid_return = (pid_angle.update(y_heading_angle))
 		pid_wheel = int(robot_speed - abs(pid_return))
+
+        ROBOT_W = (robot_speed - pid_wheel)*0.025 #get the angular velocity from the PID and convert it
+        delta_theta = ROBOT_W * FREQUENCY
 
 		if debug == True:
 			detectYellow.drawFeatures()
@@ -120,6 +134,20 @@ while True:
 		if debug_images == True:
 			cv2.imshow('image', img)
 
+        # robot_error = y_heading_angle - ROBOT__GRAPH_HEADING
+
+        # if robot_error > 0.0:
+        ROBOT__GRAPH_HEADING = ROBOT__GRAPH_HEADING + delta_theta
+        # if robot_error <= 0.0:
+        #     ROBOT_HEADING = ROBOT_HEADING
+
+        ROBOT_GRAPH_X = ROBOT_GRAPH_X + distance_travelled * math.cos(math.radians(ROBOT_HEADING))
+        ROBOT_GRAPH_Y = ROBOT_GRAPH_Y + distance_travelled * math.sin(math.radians(ROBOT_HEADING))
+
+        x_axis.append(ROBOT_GRAPH_X)
+        y_axis.append(ROBOT_GRAPH_Y)
+        heading_axis.append(ROBOT_GRAPH_HEADING)
+
 	if state_machine == 3:
 		initial_ticksA = motors.get_ticksA()
 		initial_ticksB = motors.get_ticksB()
@@ -136,7 +164,14 @@ while True:
 		if (positionA - initial_position) <= -travel_distance:
 			motors.driveMotors(0,0)
 			time.sleep(0.1)
-			sys.exit()
+            for s,i in enumerate(x_axis):
+                plt.plot(i, y_axis[s], marker=(3, 0, heading_axis[s]), markersize=10, linestyle='None')
+
+
+            #plt.plot([x_axis],[y_axis],'r>')
+            plt.axis([0, 3, 0, 4])
+            plt.show()
+
 
 	k = cv2.waitKey(1)
 
@@ -149,3 +184,5 @@ while True:
 		print("------------------------------")
 		print("\n")
 		sys.exit()
+
+    time.sleep(FREQUENCY)

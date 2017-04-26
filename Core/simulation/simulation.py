@@ -30,9 +30,6 @@ delta_theta = ROBOT_W * FREQUENCY
 heading_radians = math.atan2(GOAL_Y - ROBOT_Y, GOAL_X - ROBOT_X) #get heading angle
 heading_angle = math.degrees(heading_radians) #56 degrees
 
-stopped_turning = False
-stopped_driving = False
-
 x_axis = []
 y_axis = []
 heading_axis = []
@@ -42,14 +39,14 @@ while not FOUND_GOAL:
     heading_radians = math.atan2(GOAL_Y - ROBOT_Y, GOAL_X - ROBOT_X) #get heading angle
     heading_angle = math.degrees(heading_radians) #56 degrees
 
-    robot_heading = heading_angle - ROBOT_HEADING
+    robot_headingg = heading_angle - ROBOT_HEADING
 
     ROBOT_X = ROBOT_X + distance_travelled * math.cos(math.radians(ROBOT_HEADING))
     ROBOT_Y = ROBOT_Y + distance_travelled * math.sin(math.radians(ROBOT_HEADING))
 
-    if robot_heading > 0.0:
+    if robot_headingg > 0.0:
         ROBOT_HEADING = ROBOT_HEADING + delta_theta
-    if robot_heading <= 0.0:
+    if robot_headingg <= 0.0:
         ROBOT_HEADING = ROBOT_HEADING
 
     if ROBOT_Y > GOAL_Y:
@@ -58,7 +55,7 @@ while not FOUND_GOAL:
 
     print('Heading Angle: %s' % heading_angle)
     print('Distance Travelled: %s' % distance_travelled)
-    print('robot_heading: %s' % robot_heading)
+    print('robot_headingg: %s' % robot_headingg)
 
     print('ROBOT X: %s' % ROBOT_X)
     print('ROBOT Y: %s' % ROBOT_Y)
