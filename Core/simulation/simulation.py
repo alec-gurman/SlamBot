@@ -54,7 +54,7 @@ while not FOUND_GOAL:
 
     if ROBOT_Y > GOAL_Y:
         FOUND_GOAL = True
-        print('FOUND GOAL')
+        print('\n\nFOUND GOAL!!!\n\n')
 
     print('Heading Angle: %s' % heading_angle)
     print('Distance Travelled: %s' % distance_travelled)
@@ -70,13 +70,10 @@ while not FOUND_GOAL:
 
     time.sleep(FREQUENCY) #Loop at 5Hz
 
-print('X AXIS: %s' % x_axis)
-print('Y AXIS: %s' % y_axis)
-
 for s,i in enumerate(x_axis):
     plt.plot(i, y_axis[s], marker=(3, 0, heading_axis[s]), markersize=10, linestyle='None')
 
 
 #plt.plot([x_axis],[y_axis],'r>')
-plt.axis([0, 5, 0, 5])
+plt.axis([0, 3, 0, 4])
 plt.show()
