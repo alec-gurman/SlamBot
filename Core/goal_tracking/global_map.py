@@ -78,7 +78,7 @@ while True:
 
 		if debug == True:
 			detectYellow.drawFeatures()
-			detectRed.drawFeatures()
+			#detectRed.drawFeatures()
 
 		if debug_images == True:
 			cv2.imshow('image', img)
@@ -94,12 +94,12 @@ while True:
 		pid_return = (pid_angle.update(y_heading_angle))
 		pid_wheel = int(robot_speed - abs(pid_return))
 
-        ROBOT_W = (robot_speed - pid_wheel)*0.025 #get the angular velocity from the PID and convert it
-        delta_theta = ROBOT_W * FREQUENCY
+		ROBOT_W = (robot_speed - pid_wheel)*0.025 
+		delta_theta = ROBOT_W * FREQUENCY
 
 		if debug == True:
 			detectYellow.drawFeatures()
-			detectRed.drawFeatures()
+			#detectRed.drawFeatures()
 			cv2.putText(img, 'PID OUT: {}'.format(pid_return), (50,460), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 			cv2.putText(img, 'PID WHEELS: {}'.format(pid_wheel), (50,430), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,255,0),2,cv2.LINE_AA)
 
@@ -134,19 +134,19 @@ while True:
 		if debug_images == True:
 			cv2.imshow('image', img)
 
-        # robot_error = y_heading_angle - ROBOT__GRAPH_HEADING
+		# robot_error = y_heading_angle - ROBOT__GRAPH_HEADING
 
-        # if robot_error > 0.0:
-        ROBOT__GRAPH_HEADING = ROBOT__GRAPH_HEADING + delta_theta
-        # if robot_error <= 0.0:
-        #     ROBOT_HEADING = ROBOT_HEADING
+		# if robot_error > 0.0:
+		ROBOT_GRAPH_HEADING = ROBOT_GRAPH_HEADING + delta_theta
+		# if robot_error <= 0.0:
+		#     ROBOT_HEADING = ROBOT_HEADING
 
-        ROBOT_GRAPH_X = ROBOT_GRAPH_X + distance_travelled * math.cos(math.radians(ROBOT_HEADING))
-        ROBOT_GRAPH_Y = ROBOT_GRAPH_Y + distance_travelled * math.sin(math.radians(ROBOT_HEADING))
+		ROBOT_GRAPH_X = ROBOT_GRAPH_X + distance_travelled * math.cos(math.radians(ROBOT_HEADING))
+		ROBOT_GRAPH_Y = ROBOT_GRAPH_Y + distance_travelled * math.sin(math.radians(ROBOT_HEADING))
 
-        x_axis.append(ROBOT_GRAPH_X)
-        y_axis.append(ROBOT_GRAPH_Y)
-        heading_axis.append(ROBOT_GRAPH_HEADING)
+		x_axis.append(ROBOT_GRAPH_X)
+		y_axis.append(ROBOT_GRAPH_Y)
+		heading_axis.append(ROBOT_GRAPH_HEADING)
 
 	if state_machine == 3:
 		initial_ticksA = motors.get_ticksA()
@@ -164,13 +164,13 @@ while True:
 		if (positionA - initial_position) <= -travel_distance:
 			motors.driveMotors(0,0)
 			time.sleep(0.1)
-            for s,i in enumerate(x_axis):
-                plt.plot(i, y_axis[s], marker=(3, 0, heading_axis[s]), markersize=10, linestyle='None')
+			for s,i in enumerate(x_axis):
+				plt.plot(i, y_axis[s], marker=(3, 0, heading_axis[s]), markersize=10, linestyle='None')
 
 
-            #plt.plot([x_axis],[y_axis],'r>')
-            plt.axis([0, 3, 0, 4])
-            plt.show()
+			#plt.plot([x_axis],[y_axis],'r>')
+			plt.axis([0, 3, 0, 4])
+			plt.show()
 
 
 	k = cv2.waitKey(1)
@@ -185,4 +185,4 @@ while True:
 		print("\n")
 		sys.exit()
 
-    time.sleep(FREQUENCY)
+	time.sleep(FREQUENCY)

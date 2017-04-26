@@ -2,20 +2,19 @@
 
 class find_landmark(object):
 
-    def __init__(self, red, green, blue):
-        self.red_blobs = red
-        self.green_blobs = green
-        self.blue_blobs = blue
-        self.landmark_cx = 0
-        self.landmark_cy = 0
-        self.landmark_area = 0
-        self.landmark_marker = ((1,1),(1,1),1)
+	def __init__(self, red, green, blue):
+		self.red_blobs = red
+		self.green_blobs = green
+		self.blue_blobs = blue
+		self.landmark_cx = 0
+		self.landmark_cy = 0
+		self.landmark_area = 0
+		self.landmark_marker = ((1,1),(1,1),1)
 
 
-    def position(self, l_id):
-
-        if l_id == 1:
-            #pattern: (red, green, blue)
+	def position(self, l_id):
+		if l_id == 1:
+			#pattern: (red, green, blue)
 			for r_blob in self.red_blobs:
 				highest_cy = r_blob[2]
 				highest_cx = r_blob[1]
@@ -36,8 +35,8 @@ class find_landmark(object):
 										self.landmark_area = b_blob[0]
 										self.landmark_marker = b_blob[7]
 
-        elif l_id == 2:
-            #pattern: (green, red, green)
+		elif l_id == 2:
+			#pattern: (green, red, green)
 			for g_blob in self.green_blobs:
 				highest_cy = g_blob[2]
 				highest_cx = g_blob[1]
@@ -57,8 +56,8 @@ class find_landmark(object):
 										self.landmark_cy = middle_cy
 										self.landmark_area = r_blob[0]
 										self.landmark_marker = r_blob[7]
-        elif l_id == 3:
-            #pattern: (red, blue, red)
+		elif l_id == 3:
+			#pattern: (red, blue, red)
 			for r_blob in self.red_blobs:
 				highest_cy = r_blob[2]
 				highest_cx = r_blob[1]
@@ -79,4 +78,4 @@ class find_landmark(object):
 										self.landmark_area = b_blob[0]
 										self.landmark_marker = b_blob[7]
 
-        return landmark_cx, landmark_cy, landmark_area, landmark_marker
+		return self.landmark_cx, self.landmark_cy, self.landmark_area, self.landmark_marker

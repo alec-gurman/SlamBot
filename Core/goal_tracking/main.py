@@ -17,7 +17,7 @@ import colorBlobDetector as blob
 import pid_controller as pid
 import camera_setup as cam
 import distance_calibrate as distcal
-import landmarkFinder
+import landmarkFinder as lf
 from camera_setup import PiVideoStream
 
 #initialize the robot
@@ -287,7 +287,7 @@ while True:
 		blue_blobs = []
 		blue_blobs = detectBlue.getMultipleFeatures(160,240)
 
-		get_landmark = find_landmark(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
+		get_landmark = lf.find_landmark(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
 
 		landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(landmark_goal)
 
@@ -296,9 +296,9 @@ while True:
 			detectGreen.drawMultipleFeatures(green_blobs)
 			detectRed.drawMultipleFeatures(red_blobs)
 			detectBlue.drawMultipleFeatures(blue_blobs)
-			cv2.putText(img, 'Landmark 1: {}, {}'.format(landmark1_cx, landmark1_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
-			cv2.putText(img, 'Landmark 2: {}, {}'.format(landmark2_cx, landmark2_cy), (50,80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
-			cv2.putText(img, 'Landmark 3: {}, {}'.format(landmark3_cx, landmark3_cy), (50,110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
+			cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
+			#cv2.putText(img, 'Landmark 2: {}, {}'.format(landmark_cx, landmark_cy), (50,80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
+			#cv2.putText(img, 'Landmark 3: {}, {}'.format(landmark_cx, landmark_cy), (50,110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 
 		previous_found = False
 
