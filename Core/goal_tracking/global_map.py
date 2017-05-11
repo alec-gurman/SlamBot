@@ -36,7 +36,7 @@ mainD = 0
 
 FREQUENCY = 0.1 #10 Hz
 robot_speed = 40 #max 100
-ROBOT_V = 40 * 0.025 #convert our arbitary units to a simulation of m/s
+ROBOT_V = 40 * 0.025 #convert our arbitary units to a simulation of m/s lel...
 distance_travelled = ROBOT_V * FREQUENCY
 delta_theta = 0.0 #initialize the change in theta
 ROBOT_W = 0.0 #initialize angular velocity which will be updated by the pid
@@ -94,7 +94,7 @@ while True:
 		pid_return = (pid_angle.update(y_heading_angle))
 		pid_wheel = int(robot_speed - abs(pid_return))
 
-		ROBOT_W = (robot_speed - pid_wheel)*0.025 
+		ROBOT_W = pid_wheel*0.1
 		delta_theta = ROBOT_W * FREQUENCY
 
 		if debug == True:
