@@ -12,6 +12,7 @@ import time
 import os
 import sys
 import cv2
+import math
 import numpy as np
 import motor_controller as motors
 import colorBlobDetector as blob
@@ -20,6 +21,7 @@ import camera_setup as cam
 import distance_calibrate as distcal
 import landmarkFinder
 from camera_setup import PiVideoStream
+import matplotlib.pyplot as plt
 
 #initialize the robot
 
@@ -141,8 +143,8 @@ while True:
 		# if robot_error <= 0.0:
 		#     ROBOT_HEADING = ROBOT_HEADING
 
-		ROBOT_GRAPH_X = ROBOT_GRAPH_X + distance_travelled * math.cos(math.radians(ROBOT_HEADING))
-		ROBOT_GRAPH_Y = ROBOT_GRAPH_Y + distance_travelled * math.sin(math.radians(ROBOT_HEADING))
+		ROBOT_GRAPH_X = ROBOT_GRAPH_X + distance_travelled * math.cos(math.radians(ROBOT_GRAPH_HEADING))
+		ROBOT_GRAPH_Y = ROBOT_GRAPH_Y + distance_travelled * math.sin(math.radians(ROBOT_GRAPH_HEADING))
 
 		x_axis.append(ROBOT_GRAPH_X)
 		y_axis.append(ROBOT_GRAPH_Y)
