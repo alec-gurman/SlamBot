@@ -189,7 +189,7 @@ class ExtendedKalmanFilter(object):
         H = HJacobian(x, *args)
 
         S = dot3(H, P, H.T) + R
-        K = dot3(P, H.T, linalg.inv (S))
+        K = dot3(P, H.T, linalg.inv(S))
 
         hx =  Hx(x, *hx_args)
         y = residual(z, hx)

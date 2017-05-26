@@ -91,7 +91,7 @@ class RobotEKF(EKF):
 
 def sense(steps, sensor):
     num_z = 5 #length of map
-    idx = 1 + (steps-1) * num_z
+    idx = (1 + (steps-1)) * num_z
     z = []
     for i in range(idx,idx+num_z):
         z.append(sensor[i])
@@ -152,14 +152,21 @@ def Hx(x, landmark_pos):
 
     px = landmark_pos[0]
     py = landmark_pos[1]
-    Hx = np.array([[np.sqrt((x[0, 0] - px)**2 + (x[1, 0] - py)**2)],
-                [np.arctan2(py - x[1, 0], px - x[0, 0]) - x[2, 0]]])
+    Hx = np.array([[(np.sqrt((x[0, 0] - px)**2 + (x[1, 0] - py)**2))],
+                [(math.atan2(py - x[1, 0], px - x[0, 0])) - x[2, 0]]])
+
+    #WRAP BETWEEN -pi AND pi
+    Hx[1] = Hx[1] % (2 * np.pi)    # force in range [0, 2 pi)
+    if Hx[1] > np.pi:             # move to [-pi, pi)
+        Hx[1] -= 2 * np.pi
+
     return Hx
 
 def residual(a, b):
     """ compute residual (a-b) between measurements containing
     [range, bearing]. Bearing is normalized to [-pi, pi)"""
     y = a - b
+    #WRAP BETWEEN -pi AND pi
     y[1] = y[1] % (2 * np.pi)    # force in range [0, 2 pi)
     if y[1] > np.pi:             # move to [-pi, pi)
         y[1] -= 2 * np.pi
@@ -189,8 +196,8 @@ def run_localization(std_vel, std_steer,
     ekf.P = np.diag([.1, .1, .1])
 
     #NOISE
-    ekf.R = np.diag([1, 1])
-    M = np.diag([0.001, 0.1])
+    ekf.R = np.diag([0.1, 0.1]) #Q range and bearing
+    M = np.diag([0.1, 0.1]) #R velocity and angle
 
     data_file = open("data.txt",'r')
     sensor_file = open("sensor.txt",'r')
@@ -210,6 +217,7 @@ def run_localization(std_vel, std_steer,
     for i in range(49):
         delta_d, delta_theta = data[steps]
         robot_vel = delta_d / dt
+        sensor_read = sense(steps, sensor)
 
         XJacobian = np.matrix([[1, 0, (-delta_d*math.sin(delta_theta))],
                               [0, 1, (delta_d*math.cos(delta_theta))],
@@ -224,13 +232,18 @@ def run_localization(std_vel, std_steer,
         ekf.predict(XJacobian, UJacobian, M, u=u)
 
         for j in range(5):
-            sensor_read = sense(steps, sensor)
             rng = sensor_read[j][0]
             bearing = sensor_read[j][1]
             landmark_pos = initialize_map.get_landmark_pos(j)
             lmark = [landmark_pos[1], landmark_pos[2]]
             z_new = np.array([[rng],
                           [bearing]])
+
+            #WRAP BETWEEN -pi AND pi
+            z_new[1] = z_new[1] % (2 * np.pi)    # force in range [0, 2 pi)
+            if z_new[1] > np.pi:             # move to [-pi, pi)
+                z_new[1] -= 2 * np.pi
+
             # sim_pos = ekf.x.copy() # simulated position
             # z = z_landmark(lmark, sim_pos)
             #print z_new
