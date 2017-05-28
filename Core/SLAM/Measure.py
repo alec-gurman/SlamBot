@@ -5,7 +5,7 @@ DISTANCE PIXEL CALIBRATOR CLASS
 '''
 
 import cv2 
-import colorBlobDetector as blob
+import Vision as blob
 
 class pixelCalibrate(object):
 	

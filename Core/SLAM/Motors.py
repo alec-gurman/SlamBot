@@ -40,20 +40,24 @@ class odometry(object):
         self.wheelbase = wheelbase
 
     def set_initial(self):
-        self.ticksA = (get_ticksA()) - self.ticksA #attempt to reset stored ticks
-        self.ticksB = (get_ticksB()) - self.ticksB #attempt to reset stored ticks
+        self.ticksA = get_ticksA() #attempt to reset stored ticks
+        self.ticksB = get_ticksB() #attempt to reset stored ticks
+   
+    
+    def update(self,theta):
 
-    def update(self):
-
-        deltaA = ((self.ticksA / 360) * (math.pi * 0.065))
-        deltaB = ((self.ticksB / 90) * (math.pi * 0.065))
+        deltaA = -(((get_ticksA() - self.ticksA) / 360) * (math.pi * 0.065))
+        deltaB = -(((get_ticksB() - self.ticksB) / 90) * (math.pi * 0.065))
+        print("A Ticks: %s\n" % deltaA)
+        print("B Ticks: %s\n" % deltaB)
         delta_dist = ((deltaA + deltaB) / 2)
-        self.delta_x = (delta_dist * np.cos(self.delta_theta))
-        self.delta_y = (delta_dist * np.sin(self.delta_theta))
-        self.delta_theta = (deltaA - deltaB) / self.wheelbase
+        self.delta_x = float(delta_dist * np.cos(theta))
+        self.delta_y = float(delta_dist * np.sin(theta))
+        self.delta_theta = (deltaB - deltaA) / self.wheelbase
+        #print(self.delta_theta)
 	    #contain delta theta between pi and -pi
-        self.delta_theta = self.delta_theta % (2 * np.pi)
-        if self.delta_theta > np.pi:
-            self.delta_theta -= 2 * np.pi
-            
-        return np.array([[self.delta_x, self.delta_y, self.delta_theta]]).T
+        #self.delta_theta = self.delta_theta % (2 * np.pi)
+        #if self.delta_theta > np.pi:
+        #    self.delta_theta -= 2 * np.pi
+        test = np.array([[self.delta_x, self.delta_y, self.delta_theta]]).T
+        return test
