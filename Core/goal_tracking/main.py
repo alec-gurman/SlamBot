@@ -17,7 +17,7 @@ import colorBlobDetector as blob
 import pid_controller as pid
 import camera_setup as cam
 import distance_calibrate as distcal
-import landmarkFinder as lf
+import Landmarks as lf
 from camera_setup import PiVideoStream
 
 #initialize the robot

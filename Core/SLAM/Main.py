@@ -9,8 +9,12 @@ Main SLAM Implementation
 #from Draw import Draw as Draw
 #from EKF import RobotEKF as ekf
 from PID import pidcontrol as PID
-import Motors as Motors
 from Motors import odometry as odom
+from Landmarks import find_landmark as findL
+from Camera import PiVideoStream
+import distance_calibrate as distcal
+import Vision as Vision
+import Motors as Motors
 import numpy as np
 
 class robot(object):
@@ -36,6 +40,32 @@ def contain_pi(theta):
     if theta > np.pi:             # move to [-pi, pi)
         theta -= 2 * np.pi
     return theta
+
+def find_landmark(ID,Stream,Measure):
+
+    img = Stream.read()
+
+	detectRed = Vision.get_blob('red', img)
+	red_blobs = []
+	red_blobs = detectRed.getMultipleFeatures(160,240)
+
+	detectGreen = Vision.get_blob('green', img)
+	green_blobs = []
+	green_blobs = detectGreen.getMultipleFeatures(160,240)
+
+	detectBlue = Vision.get_blob('blue', img)
+	blue_blobs = []
+	blue_blobs = detectBlue.getMultipleFeatures(160,240)
+
+    get_landmark = Landmarks.findL(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
+
+    landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(ID)
+    if not (landmark_bearing == 0):
+        landmark_range = Measure.distance_to_camera(landmark_marker[1][0])
+        return np.array([[landmark_range, landmark_bearing]]).T
+    else:
+        # print('[SLAMBOT][ERROR] Landmark cannot be seen')
+        return np.array([[0.0, 0.0]]).T
 
 
 def drive_to_global(x, y, robot, PID, robot_odom):
@@ -71,19 +101,31 @@ def drive_to_global(x, y, robot, PID, robot_odom):
 
 
 if __name__ == "__main__":
-	
-    print('[SLAMBOT] Starting main program')
 
+    print('[SLAMBOT] Starting main program')
+    print('[SLAMBOT] Warming up the camera')
+    Stream= PiVideoStream().start() #start the video stream on a seperate thread
+    time.sleep(2.0) #allow camera to warm up
+    print('[SLAMBOT] Calibrating distances')
+    Measure = distcal.pixelCalibrate(1200,90) #calibrate the camera for distances
+
+    print('[SLAMBOT] initializing the motors')
     Motors.init() #setup the motors
     PID = PID(40,0.0,0.0) #P, I, D
 
     robot = robot(std_vel=40, std_steer=30) #speed units are in a scaled from 0 to 100
     robot.x = np.array([[0.0, 0.0, 0.0]]).T #robot_x, robot_y, robot_theta
     robot_odom = odom(robot.wheelbase)
-    print(robot.x)
+
+    print('[SLAMBOT] Entering main loop')
 
     while True:
-        print('[SLAMBOT] Driving to global')
+
         drive_to_global(0.5, 0, robot, PID, robot_odom) #units are in meters
-        
+        # for i in range(2):
+        #     range_bearing = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
+        #     if (range_bearing[0] > 0) and (range_bearing[1] > 0): #landmark found
+        #         print('[SLAMBOT] Found landmark: %s\n' % i)
+        #         print(range_bearing)
+
     Motors.driveMotors(0,0)
