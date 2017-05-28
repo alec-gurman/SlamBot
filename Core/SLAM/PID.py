@@ -10,7 +10,7 @@ class pidcontrol(object):
 		self.Kp = P
 		self.Ki = I
 		self.Kd = D
-		self.set_point=180.0
+		self.set_point=0.0
 		self.error=0.0
 		self.prevError= 0.0
 		self.intAccum = 0.0

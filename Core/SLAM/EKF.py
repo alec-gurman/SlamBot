@@ -7,6 +7,7 @@ Extended Kalman Filter Implementation
 '''
 
 from filterpy.kalman import ExtendedKalmanFilter as EKF
+from numpy import dot
 
 class RobotEKF(EKF):
     def __init__(self, dt, wheelbase, std_vel, std_steer):
