@@ -54,8 +54,9 @@ class odometry(object):
         self.delta_theta = (deltaB - deltaA) / self.wheelbase
         #print(self.delta_theta)
 	    #contain delta theta between pi and -pi
-        #self.delta_theta = self.delta_theta % (2 * np.pi)
-        #if self.delta_theta > np.pi:
-        #    self.delta_theta -= 2 * np.pi
+		# I RECENTLY UNCOMMENTED THIS AS WE MAY NEED DELTA THETA IN THIS RANGE
+        self.delta_theta = self.delta_theta % (2 * np.pi)
+        if self.delta_theta > np.pi:
+           self.delta_theta -= 2 * np.pi
         delta_pose = np.array([[self.delta_x, self.delta_y, self.delta_theta]]).T
-        return delta_pose, delta_dist 
+        return delta_pose, delta_dist

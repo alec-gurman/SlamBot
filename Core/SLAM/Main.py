@@ -52,15 +52,9 @@ class robot(object):
         self.u[1] = self.x[1]
         self.u[2] = self.x[2]
 
-        #PREDICT LANDMARK POSITION
-		if n > 0:
-			for i in range(len(self.landmarks)):
-				self.u[(3 + self.landmarks[i] * 2)] = landmarks[self.landmarks[i]][0]
-				self.u[(4 + self.landmarks[i] * 2)] = landmarks[self.landmarks[i]][1]
-
 		#COVARIANCE
-		#self.sigma = dot(self.xjac, self.sigma).dot(self.xjac.T) + dot(self.ujac, self.R).dot(self.ujac.T)
-		#self.sigma = np.matrix([[self.sigma],[np.zeros()]])
+		self.sigma = dot(self.xjac, self.sigma).dot(self.xjac.T) + dot(self.ujac, self.R).dot(self.ujac.T)
+		self.sigma = np.matrix([[self.sigma],[np.zeros()]])
 
 	def send(self):
 
@@ -75,7 +69,6 @@ def contain_pi(theta):
 	'''
 
 	#WRAP BETWEEN -pi AND pi
-	#theta = theta - np.pi
 	theta = theta % (2 * np.pi)    # force in range [0, 2 pi)
 	if theta > np.pi:             # move to [-pi, pi)
 		theta -= 2 * np.pi
@@ -147,21 +140,22 @@ def drive_relative(x, y, robot):
 	time.sleep(robot.dt)
 	current_pose, delta_d = robot.odom.update(robot.x[2])
 	robot.update_pose(current_pose)
-	# 
-    # XJacobianR = np.matrix([[1, 0, (-delta_d*math.sin(current_pose[2]))],
-    #                       [0, 1, (delta_d*math.cos(current_pose[2]))],
-    #                       [0, 0, 1]])
-	#
-    # UJacobianR = np.matrix([[(math.cos(current_pose[2])), 0],
-    #                       [(math.sin(current_pose[2])), 0],
-    #                       [0, 1]])
-	#
-	# n = len(robot.landmarks)
-	#
-	# robot.xjac = np.matrix([[XJacobianR, np.zeros((3,(2 * n)))],
-	# 					  [np.zeros(((2 * n), 3)), np.identity(2 * n)]])
-	#
-	# robot.ujac = np.matrix([[UJacobianR],[np.zeros(((2 * n), 2))]])
+
+    XJacobianR = np.matrix([[1, 0, (-delta_d*math.sin(current_pose[2]))],
+                          [0, 1, (delta_d*math.cos(current_pose[2]))],
+                          [0, 0, 1]])
+
+    UJacobianR = np.matrix([[(math.cos(current_pose[2])), 0],
+                          [(math.sin(current_pose[2])), 0],
+                          [0, 1]])
+
+	n = len(robot.landmarks)
+
+	top_xjac  = np.concatenate((XJacobianR, np.zeros((3,(2 * n)))), axis=1)
+	bottom_xjac = np.concatenate((np.zeros(((2 * n), 3)), np.identity(2 * n)), axis=1)
+
+	robot.xjac = np.concatenate((top_xjac,bottom_xjac))
+	robot.ujac = np.concatenate((UJacobianR,np.zeros(((2 * n), 2))))
 
 	return False
 
@@ -177,18 +171,24 @@ def drive_path(path, robot):
 def run_localization(robot):
 
 	path = drive_relative(0.9,0.9, robot) #make a move
-	landmarks = np.zeros((5,2)) #initialize the landmarks array
-	robot.ekf_predict(landmarks)
+	robot.ekf_predict()
 	if path: shutdown(robot) #check when path is finished
 	sensor = find_landmark(robot) #find any landmarks
 	if not(sensor == False):
 		if sensor[2] not in robot.landmarks:
-			l_x = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
-			l_y = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
-			landmarks[sensor[2]][0] = l_x
-			landmarks[sensor[2]][1] = l_y
+			#expanded the state vector
+			robot.u[(3 + robot.landmarks[sensor[2]] * 2)] = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
+			robot.u[(4 + robot.landmarks[sensor[2]] * 2)] = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
 			robot.landmarks.append(sensor[2])
-			robot.ekf_predict(landmarks)
+			n = len(robot.landmarks)
+			robot.zjac = np.array([[np.cos(robot.x[2] + sensor[1]), -sensor[0] * (np.sin(robot.x[2] + sensor[1]))],
+								   [np.sin(robot.x[2] + sensor[1]), sensor[0] * (np.cos(robot.x[2] + sensor[1]))]])
+			landmark_sigma = dot(robot.zjac,robot.Q).dot(robot.zjac.T)
+			zsigma_zeros = np.zeros((2,(2 * n) + 1))
+			robot.zsigma = np.concatenate(((np.concatenate((robot.sigma,zsigma_zeros),axis=0)),(np.concatenate((zsigma_zeros.T,landmark_sigma),axis=0))),axis=1)
+			robot.sigma = robot.zsigma #expanded the covariance
+
+	#UPDATE STEP
 
 
 
