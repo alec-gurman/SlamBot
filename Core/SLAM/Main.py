@@ -41,17 +41,15 @@ def contain_pi(theta):
     if theta > np.pi:             # move to [-pi, pi)
         theta -= 2 * np.pi
     return theta
-    
+
 def time_step(step):
-	
-	time.sleep(step)
-	Motors.driveMotors(0,0)
+
 	time.sleep(step)
 
 def find_landmark(ID,Stream,Measure):
 
     img = Stream.read()
-    
+
     detectRed = Vision.get_blob('red', img)
     red_blobs = []
     red_blobs = detectRed.getMultipleFeatures(160,240)
@@ -59,15 +57,15 @@ def find_landmark(ID,Stream,Measure):
     detectGreen = Vision.get_blob('green', img)
     green_blobs = []
     green_blobs = detectGreen.getMultipleFeatures(160,240)
-    
+
     detectBlue = Vision.get_blob('blue', img)
     blue_blobs = []
-    blue_blobs = detectBlue.getMultipleFeatures(160,240)
-    
+    blue_blobs = de tectBlue.getMultipleFeatures(160,240)
+
     get_landmark = Landmarks.findL(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
-    
+
     landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(ID)
-    
+
     if not (landmark_bearing == 0):
         landmark_range = Measure.distance_to_camera(landmark_marker[1][0])
         return np.array([[landmark_range, landmark_bearing]]).T
@@ -76,7 +74,7 @@ def find_landmark(ID,Stream,Measure):
         return np.array([[0.0, 0.0]]).T
 
 
-def drive_to_global(x, y, robot, PID, robot_odom):
+def drive_to_global(x, y, robot, PID, robot_odom, dt):
     '''
     Drive to a given global position
     inputs: x, y
@@ -87,7 +85,6 @@ def drive_to_global(x, y, robot, PID, robot_odom):
         #print('[SLAMBOT] Goal not reached, moving robot')
         robot_odom.set_initial()
         heading = (np.arctan2(y - robot.x[1], x - robot.x[0])) - robot.x[2] #in radians
-        print(heading)
         # the output of our pid represents a signed number depending on the direction we are turning
         pid_return = abs(PID.update(heading)) #abs so that our motors dont travel in reverse direction
         #limit to robots maximum angular velocity
@@ -96,21 +93,17 @@ def drive_to_global(x, y, robot, PID, robot_odom):
         pid_wheel = int(robot.std_vel - pid_return) #integer as our motor function only accepts an integer
         #basic drive loop
         if heading > 0.0:
-            #pass
             Motors.driveMotors(pid_wheel, robot.std_vel)
         if heading <= 0.0:
-            #pass
             Motors.driveMotors(robot.std_vel,pid_wheel)
     else:
         Motors.driveMotors(0,0)
-        
-    time_step(0.25)
 
-    #print('[SLAMBOT] Updating odometry')
+    time_step(dt)
+
     current_pose = robot_odom.update(robot.x[2])
     print('Odometry: \n%s\n' % current_pose)
     print('Robot Pose: \n%s\n' % robot.x)
-    #print('[SLAMBOT] Updating Robot pose')
     robot.update_pose(current_pose)
 
 
@@ -131,11 +124,13 @@ if __name__ == "__main__":
     robot.x = np.array([[0.0, 0.0, 0.0]]).T #robot_x, robot_y, robot_theta
     robot_odom = odom(robot.wheelbase)
 
+    dt = 0.25 # TIME STEP IN HZ
+
     print('[SLAMBOT] Initialization complete, starting')
 
     while True:
 
-        drive_to_global(0.5, 0.5, robot, PID, robot_odom) #units are in meters
+        drive_to_global(0.5, 0.5, robot, PID, robot_odom, dt) #units are in meters
         # for i in range(2):
         #     range_bearing = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
         #     if (range_bearing[0] > 0) and (range_bearing[1] > 0): #landmark found
