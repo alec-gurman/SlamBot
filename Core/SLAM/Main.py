@@ -44,10 +44,6 @@ def contain_pi(theta):
 		theta -= 2 * np.pi
 	return theta
 
-def time_step(step):
-
-	time.sleep(step)
-
 def find_landmark(ID,Stream,Measure):
 
 	img = Stream.read()
@@ -102,15 +98,12 @@ def drive_relative(x, y, robot, PID, robot_odom, dt, client):
 			Motors.driveMotors(robot.std_vel,pid_wheel)
 	else:
 		Motors.driveMotors(0,0)
-		
+
 	client.send(robot.x)
 
 	time.sleep(dt)
 
 	current_pose = robot_odom.update(robot.x[2])
-	#client.send(current_pose)
-	#print('Odometry: \n%s\n' % current_pose)
-	#print('Robot Pose: \n%s\n' % robot.x)
 	robot.update_pose(current_pose)
 
 
@@ -118,8 +111,8 @@ if __name__ == "__main__":
 
 	print('[SLAMBOT] Starting main program')
 	print('[SLAMBOT] Warming up the camera')
-	#Stream = PiVideoStream().start() #start the video stream on a seperate thread
-	#time.sleep(2.0) #allow camera to warm up
+	Stream = PiVideoStream().start() #start the video stream on a seperate thread
+	time.sleep(2.0) #allow camera to warm up
 	print('[SLAMBOT] Calibrating distances')
 	Measure = distcal.pixelCalibrate(1200,90) #calibrate the camera for distances
 
@@ -130,7 +123,7 @@ if __name__ == "__main__":
 	robot = robot(std_vel=40, std_steer=30) #speed units are in a scaled from 0 to 100
 	robot.x = np.array([[0.0, 0.0, 0.0]]).T #robot_x, robot_y, robot_theta
 	robot_odom = odom(robot.wheelbase)
-	
+
 	client = SocketClient()
 	client.connect()
 
@@ -138,14 +131,14 @@ if __name__ == "__main__":
 
 	print('[SLAMBOT] Initialization complete, starting')
 
-	while True:	
+	while True:
 		try:
-			drive_relative(1.0, 0.8, robot, PID, robot_odom, dt, client) #units are in meters
-			# for i in range(2):
-			#     range_bearing = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
-			#     if (range_bearing[0] > 0) and (range_bearing[1] > 0): #landmark found
-			#         print('[SLAMBOT] Found landmark: %s\n' % i)
-			#         print(range_bearing)
+			#drive_relative(1.0, 0.8, robot, PID, robot_odom, dt, client) #units are in meters
+			for i in range(2):
+			    range_bearing = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
+			    if (range_bearing[0] > 0) and (range_bearing[1] > 0): #landmark found
+			        print('[SLAMBOT] Found landmark: %s\n' % i)
+			        print(range_bearing)
 		except KeyboardInterrupt:
 			print('[SLAMBOT] Shutting down...')
 			client.sock.close()

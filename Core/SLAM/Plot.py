@@ -21,6 +21,8 @@ if __name__ == '__main__':
     server = SocketServer()
     server.connect()
 
+    print('[SLAMBOT] Starting Plotting Script and listening for a robot pose')
+
     while True:
         try:
             data = server.recieve()
