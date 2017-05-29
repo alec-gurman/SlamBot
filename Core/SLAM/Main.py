@@ -14,6 +14,7 @@ from Landmarks import find_landmark as Landmarks
 from Camera import PiVideoStream
 from SocketClient import SocketClient
 from Measure import pixelCalibrate
+from filterpy.kalman import ExtendedKalmanFilter as EKF
 import Vision as Vision
 import Motors as Motors
 import numpy as np
@@ -24,6 +25,7 @@ import cv2
 class robot(object):
 
 	def __init__(self, std_vel, std_steer, dt):
+		EKF.__init__(self, 3, 2, 2)
 		self.std_vel = std_vel
 		self.std_steer = std_steer
 		self.max_angular = std_vel - std_steer
@@ -32,6 +34,9 @@ class robot(object):
 		self.PID = PID(40,0.0,0.0) #P, I, D
 		self.client = SocketClient()
 		self.dt = dt
+		self.landmarks = []
+		self.R = np.diag([0.1, 0.1])
+		self.Q = np.diag([0.1, 0.1])
 		self.current_path = 0
 		self.stream = PiVideoStream() #start the video stream on a seperate thread
 		self.measure = pixelCalibrate(1200,90) #calibrate the camera for distances
@@ -39,9 +44,28 @@ class robot(object):
 	def update_pose(self, current_pose):
 		self.x = self.x + current_pose
 
-	def ekf_predict(self, xjac, ujac, R, robot_pose, landmarks):
-		#MOVEMENT
-		self.x = self.x + robot_pose
+	def ekf_predict(self, landmarks):
+
+		n = len(self.landmarks)
+		#PREDICT ROBOT POSE
+		self.u[0] = self.x[0]
+        self.u[1] = self.x[1]
+        self.u[2] = self.x[2]
+
+        #PREDICT LANDMARK POSITION
+		if n > 0:
+			for i in range(len(self.landmarks)):
+				self.u[(3 + self.landmarks[i] * 2)] = landmarks[self.landmarks[i]][0]
+				self.u[(4 + self.landmarks[i] * 2)] = landmarks[self.landmarks[i]][1]
+
+		#COVARIANCE
+		#self.sigma = dot(self.xjac, self.sigma).dot(self.xjac.T) + dot(self.ujac, self.R).dot(self.ujac.T)
+		#self.sigma = np.matrix([[self.sigma],[np.zeros()]])
+
+	def send(self):
+
+		message = np.array([[self.u]])
+		self.client.send(message)
 
 
 
@@ -57,11 +81,11 @@ def contain_pi(theta):
 		theta -= 2 * np.pi
 	return theta
 
-def find_landmark(Stream,Measure):
+def find_landmark(robot):
 
 	#scan each color pattern in the current frame to try and find a landmark
 	for i in range(5):
-		img = Stream.read()
+		img = robot.stream.read()
 
 		detectRed = Vision.get_blob('red', img)
 		red_blobs = []
@@ -86,8 +110,10 @@ def find_landmark(Stream,Measure):
 		cv2.imshow('image', img)
 
 		if not (landmark_bearing == 0):
-			landmark_range = Measure.distance_to_camera(landmark_marker[1][0])
+			landmark_range = robot.measure.distance_to_camera(landmark_marker[1][0])
 			return np.array([[landmark_range, landmark_bearing, i]]).T
+
+		return False
 
 def drive_relative(x, y, robot):
 	'''
@@ -117,11 +143,26 @@ def drive_relative(x, y, robot):
 		return True
 		Motors.driveMotors(0,0)
 
-	robot.client.send(robot.x)
+	robot.send()
 	time.sleep(robot.dt)
-	current_pose = robot.odom.update(robot.x[2])
+	current_pose, delta_d = robot.odom.update(robot.x[2])
 	robot.update_pose(current_pose)
-	
+	# 
+    # XJacobianR = np.matrix([[1, 0, (-delta_d*math.sin(current_pose[2]))],
+    #                       [0, 1, (delta_d*math.cos(current_pose[2]))],
+    #                       [0, 0, 1]])
+	#
+    # UJacobianR = np.matrix([[(math.cos(current_pose[2])), 0],
+    #                       [(math.sin(current_pose[2])), 0],
+    #                       [0, 1]])
+	#
+	# n = len(robot.landmarks)
+	#
+	# robot.xjac = np.matrix([[XJacobianR, np.zeros((3,(2 * n)))],
+	# 					  [np.zeros(((2 * n), 3)), np.identity(2 * n)]])
+	#
+	# robot.ujac = np.matrix([[UJacobianR],[np.zeros(((2 * n), 2))]])
+
 	return False
 
 def drive_path(path, robot):
@@ -132,12 +173,26 @@ def drive_path(path, robot):
 			robot.current_path = robot.current_path + 1
 		else:
 			shutdown(robot)
-	
+
 def run_localization(robot):
 
-	path = drive_relative(0.9,0.9, robot)
-	if path: shutdown(robot) 
-	#sensor = find_landmark(Stream,Measure)
+	path = drive_relative(0.9,0.9, robot) #make a move
+	landmarks = np.zeros((5,2)) #initialize the landmarks array
+	robot.ekf_predict(landmarks)
+	if path: shutdown(robot) #check when path is finished
+	sensor = find_landmark(robot) #find any landmarks
+	if not(sensor == False):
+		if sensor[2] not in robot.landmarks:
+			l_x = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
+			l_y = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
+			landmarks[sensor[2]][0] = l_x
+			landmarks[sensor[2]][1] = l_y
+			robot.landmarks.append(sensor[2])
+			robot.ekf_predict(landmarks)
+
+
+
+
 
 def shutdown(robot):
 	robot.stream.stop()
@@ -153,7 +208,9 @@ if __name__ == "__main__":
 	print('[SLAMBOT] Warming up the camera')
 
 	robot = robot(std_vel=40, std_steer=30, dt=0.25) #speed units are in a scaled from 0 to 100
-	robot.x = np.array([[0.0, 0.0, 0.0]]).T #robot_x, robot_y, robot_theta ROBOT INITALS
+	robot.x = np.zeros((3,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
+    robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
+	robot.sigma = np.identity(3)
 	robot.client.connect() #Start the python socket
 	robot.stream.start() #Start the camera
 	time.sleep(2.0) #allow camera to warm up

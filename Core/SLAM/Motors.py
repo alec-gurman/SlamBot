@@ -42,8 +42,8 @@ class odometry(object):
     def set_initial(self):
         self.ticksA = get_ticksA() #attempt to reset stored ticks
         self.ticksB = get_ticksB() #attempt to reset stored ticks
-   
-    
+
+
     def update(self,theta):
 
         deltaA = -(((get_ticksA() - self.ticksA) / 360) * (math.pi * 0.065))
@@ -57,5 +57,5 @@ class odometry(object):
         #self.delta_theta = self.delta_theta % (2 * np.pi)
         #if self.delta_theta > np.pi:
         #    self.delta_theta -= 2 * np.pi
-        test = np.array([[self.delta_x, self.delta_y, self.delta_theta]]).T
-        return test
+        delta_pose = np.array([[self.delta_x, self.delta_y, self.delta_theta]]).T
+        return delta_pose, delta_dist 
