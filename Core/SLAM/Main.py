@@ -64,16 +64,16 @@ def find_landmark(ID,Stream,Measure):
 	get_landmark = Landmarks(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
 
 	landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(ID)
-	
+
 	detectGreen.drawMultipleFeatures(green_blobs)
 	detectRed.drawMultipleFeatures(red_blobs)
 	detectBlue.drawMultipleFeatures(blue_blobs)
 	cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
-	
+
 	#print(landmark_bearing)
-	
+
 	cv2.imshow('image', img)
-	
+
 	if not (landmark_bearing == 0):
 		landmark_range = Measure.distance_to_camera(landmark_marker[1][0])
 		return np.array([[landmark_range, landmark_bearing]]).T
@@ -90,7 +90,7 @@ def drive_relative(x, y, robot, PID, robot_odom, dt, client):
 	if robot.x[0] < x or robot.x[1] < y:
 		#print('[SLAMBOT] Goal not reached, moving robot')
 		robot_odom.set_initial()
-		heading = (np.arctan2(y - robot.x[1], x - robot.x[0])) - robot.x[2] #in radians
+		heading = contain_pi((np.arctan2(y - robot.x[1], x - robot.x[0])) - robot.x[2]) #in radians
 		# the output of our pid represents a signed number depending on the direction we are turning
 		pid_return = abs(PID.update(heading)) #abs so that our motors dont travel in reverse direction
 		#limit to robots maximum angular velocity
@@ -146,7 +146,7 @@ if __name__ == "__main__":
 			if not (sensor[0] == 0) and not (sensor[1] == 0): #landmark found
 				print('[SLAMBOT] Found landmark: %s\n' % i)
 				print(sensor)
-		
+
 		k = cv2.waitKey(1)
 		if k%256 == 27:
 			vs.stop()

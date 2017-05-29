@@ -89,7 +89,7 @@ class get_blob(object):
 				self.area_rect = cv2.minAreaRect(cnts)
 				if self.cx > 0 and self.cy > 0:
 					goal_rad = np.arctan2(self.cy - robot_y, self.cx - robot_x)
-					self.goal_angle = goal_rad
+					self.goal_angle = contain_pi(goal_rad) #contain angle between pi and -pi
 				else:
 					self.goal_angle = 0
 				current_contour.append(self.area)
@@ -132,9 +132,14 @@ class get_blob(object):
 				self.area_rect = cv2.minAreaRect(cnts)
 		return self.area_rect
 
-def containAngle360(angle):
-	if(angle < 1):
-		angle = angle + 270
-	elif(angle >= 361):
-		angle = angle - 270
-	return angle
+def contain_pi(theta):
+	'''
+	Little function to contain an angle between -pi and pi
+	'''
+
+	#WRAP BETWEEN -pi AND pi
+	#theta = theta - np.pi
+	theta = theta % (2 * np.pi)    # force in range [0, 2 pi)
+	if theta > np.pi:             # move to [-pi, pi)
+		theta -= 2 * np.pi
+	return theta
