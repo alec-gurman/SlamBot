@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
 		k = cv2.waitKey(1)
 		if k%256 == 27:
-			vs.stop()
+			Stream.stop()
 			print('[SLAMBOT] Shutting down...')
 			client.sock.close()
 			Motors.driveMotors(0,0)

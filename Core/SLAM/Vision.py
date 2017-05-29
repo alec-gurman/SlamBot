@@ -120,7 +120,7 @@ class get_blob(object):
 			for blobs in array:
 				cv2.rectangle(self.image,(blobs[3],blobs[4]), (blobs[3]+blobs[5],blobs[4]+blobs[6]), (0,255,0),2)
 				cv2.circle(self.image,(blobs[1],blobs[2]),2,(255,0,0),5)
-				cv2.line(self.image,(320,480),(blobs[1],blobs[2]),(255,0,0),2)
+				cv2.line(self.image,(160,240),(blobs[1],blobs[2]),(255,0,0),2)
 
 	def find_marker(self):
 
