@@ -13,6 +13,9 @@ and wont install correctly on the raspberry pi
 
 import socket
 import sys
+import numpy as np
+from io import BytesIO, StringIO
+import pickle
 
 class SocketServer(object):
 
@@ -21,27 +24,36 @@ class SocketServer(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server = ('192.168.43.30', 10000)
         self.address = server
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind(server)
         self.sock.listen(1)
 
-    def recieve(self):
-
+    def connect(self):
         #find connections
         self.connection, self.client_address = self.sock.accept()
+
+    def recieve(self):
+
         try:
-            data = connection.recv(999)
-            print('[SLAMBOT] Connected to: %s\n' % self.client_address)
-            print('[SLAMBOT] Recieved: \n%s\n' % data)
-        except:
+            data = self.connection.recv(1024)
+            data = pickle.loads(data)
+            print(repr(data))
+            return data
+        except Exception as e:
+            print(str(e))
             print('[SLAMBOT][ERROR] Could not connect')
             self.connection.close()
+            sys.exit()
 
 if __name__ == '__main__':
 
     server = SocketServer()
     print('[SLAMBOT] Starting Socket Server on address: %s\n' % server.address[0])
+    server.connect()
     while True:
-        server.recieve()
-
-    server.connection.close()
-    server.sock.close()
+        try:
+            server.recieve()
+        except KeyboardInterrupt:
+            print('\n[SLAMBOT] Stopping Socket Server')
+            server.sock.close()
+            sys.exit()

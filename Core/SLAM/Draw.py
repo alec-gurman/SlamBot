@@ -8,6 +8,10 @@ marker drawing and covariance drawing
 '''
 
 import matplotlib.pyplot as plt
+import matplotlib.path as mpath
+import math
+import numpy as np
+from matplotlib.patches import Ellipse
 
 class Draw(object):
 
