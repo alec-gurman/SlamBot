@@ -58,7 +58,7 @@ class robot(object):
 
 	def send(self):
 
-		message = np.array([[self.u]])
+		message = self.u
 		self.client.send(message)
 
 
