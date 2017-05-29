@@ -90,7 +90,7 @@ def drive_relative(x, y, robot, PID, robot_odom, dt, client):
 	if robot.x[0] < x or robot.x[1] < y:
 		#print('[SLAMBOT] Goal not reached, moving robot')
 		robot_odom.set_initial()
-		heading = contain_pi((np.arctan2(y - robot.x[1], x - robot.x[0])) - robot.x[2]) #in radians
+		heading = (np.arctan2(y - robot.x[1], x - robot.x[0])) - robot.x[2] #in radians
         print(heading)
 		# the output of our pid represents a signed number depending on the direction we are turning
 		pid_return = abs(PID.update(heading)) #abs so that our motors dont travel in reverse direction
