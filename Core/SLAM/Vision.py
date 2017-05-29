@@ -92,7 +92,6 @@ class get_blob(object):
 					self.goal_angle = contain_pi(goal_rad + (np.pi / 2)) #contain angle between pi and -pi
 					# default angle has straight ahead as -1.57, max angle to the left is -0.07, max angle to the right is -2.4
 					# defautt straight ahead is -pi/2 the left is 0 and the right is - pi
-					self.goal_angle = 0
 				current_contour.append(self.area)
 				current_contour.append(self.cx)
 				current_contour.append(self.cy)

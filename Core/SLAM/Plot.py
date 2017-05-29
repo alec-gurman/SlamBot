@@ -14,14 +14,14 @@ from SocketServer import SocketServer
 
 if __name__ == '__main__':
 
+    print('[SLAMBOT] Starting Plotting Script and listening for a robot pose')
+
     plt.figure()
     plt.axis([0, 2.0, 0, 2.0])
     Draw = Draw()
     Draw.draw_base_map()
     server = SocketServer()
     server.connect()
-
-    print('[SLAMBOT] Starting Plotting Script and listening for a robot pose')
 
     while True:
         try:

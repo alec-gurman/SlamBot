@@ -91,6 +91,7 @@ def drive_relative(x, y, robot, PID, robot_odom, dt, client):
 		#print('[SLAMBOT] Goal not reached, moving robot')
 		robot_odom.set_initial()
 		heading = contain_pi((np.arctan2(y - robot.x[1], x - robot.x[0])) - robot.x[2]) #in radians
+        print(heading)
 		# the output of our pid represents a signed number depending on the direction we are turning
 		pid_return = abs(PID.update(heading)) #abs so that our motors dont travel in reverse direction
 		#limit to robots maximum angular velocity
@@ -140,15 +141,24 @@ if __name__ == "__main__":
 	print('[SLAMBOT] Initialization complete, starting')
 
 	while True:
-		#drive_relative(1.0, 0.8, robot, PID, robot_odom, dt, client) #units are in meters
-		for i in range(2):
-			sensor = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
-			if not (sensor[0] == 0) and not (sensor[1] == 0): #landmark found
-				print('[SLAMBOT] Found landmark: %s\n' % i)
-				print(sensor)
 
-		k = cv2.waitKey(1)
-		if k%256 == 27:
+        try:
+    		#drive_relative(1.0, 0.8, robot, PID, robot_odom, dt, client) #units are in meters
+    		for i in range(2):
+    			sensor = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
+    			if not (sensor[0] == 0) and not (sensor[1] == 0): #landmark found
+    				print('[SLAMBOT] Found landmark: %s\n' % i)
+    				print(sensor)
+
+    		k = cv2.waitKey(1)
+    		if k%256 == 27:
+    			Stream.stop()
+    			print('[SLAMBOT] Shutting down...')
+    			client.sock.close()
+    			Motors.driveMotors(0,0)
+    			sys.exit()
+
+        except KeyboardInterrupt:
 			Stream.stop()
 			print('[SLAMBOT] Shutting down...')
 			client.sock.close()
