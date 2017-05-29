@@ -48,8 +48,6 @@ class odometry(object):
 
         deltaA = -(((get_ticksA() - self.ticksA) / 360) * (math.pi * 0.065))
         deltaB = -(((get_ticksB() - self.ticksB) / 90) * (math.pi * 0.065))
-        print("A Ticks: %s\n" % deltaA)
-        print("B Ticks: %s\n" % deltaB)
         delta_dist = ((deltaA + deltaB) / 2)
         self.delta_x = float(delta_dist * np.cos(theta))
         self.delta_y = float(delta_dist * np.sin(theta))

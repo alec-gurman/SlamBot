@@ -15,7 +15,7 @@ import socket
 import sys
 import time
 import numpy as np
-import pickle
+from io import BytesIO
 
 class SocketClient(object):
 
@@ -29,8 +29,11 @@ class SocketClient(object):
 
 	def send(self, message):
 		try:
-			msg = pickle.dumps(message, protocol=2)
-			self.sock.sendall(msg)
+			f = BytesIO()
+			np.savez_compressed(f,frame=message)
+			f.seek(0)
+			out = f.read().encode()
+			self.sock.sendall(out)
 		except Exception as e:
 			print(e)
 			print('[SLAMBOT][ERROR] Could not connect to: %s\n' % self.address[0])
@@ -43,7 +46,7 @@ if __name__ == '__main__':
 	client.connect()
 	while True:
 		try:
-			message = np.array([[1.2334, 5.23423432, -2.212425245]])
+			message = np.array([[0.0, 0.0, 0.0]])
 			client.send(message)
 			time.sleep(0.5)
 		except KeyboardInterrupt:
