@@ -30,36 +30,10 @@ class RobotEKF(EKF):
         self.v, self.a, self.theta = v, a, theta
 
     def predict(self, xjac, ujac, m, u=0):
-        #run a motion model
+        #motion model 
         self.x = self.move(self.x, u, self.dt)
-        #apply prediciton alogorithm
+        #covariance
         self.P = dot(xjac, self.P).dot(xjac.T) + dot(ujac, m).dot(ujac.T)
-
-
-    def move(self, x, u, dt):
-        robot_heading = x[2, 0]
-        vel = u[0]
-        delta_theta = u[1]
-        delta_d = vel * dt
-
-        # if abs(delta_theta) > 0.001: # is robot turning?
-        #     beta = (dist / self.wheelbase) * np.tan(delta_theta)
-        #     r = self.wheelbase / np.tan(delta_theta) # radius
-        #
-        #     dx = np.array([[-r*np.sin(hdg) + r*np.sin(r + beta)],
-        #                    [r*np.cos(hdg) - r*np.cos(hdg + beta)],
-        #                    [beta]])
-        # else: # moving in straight line
-        #     dx = np.array([[delta_d*np.cos(robot_theta)],
-        #                    [delta_d*np.sin(robot_theta)],
-        #                    [0]])
-
-        #SIMULATION MOTION CONTROL MODEL
-
-        dx = np.array([[delta_d * np.cos(robot_heading)],
-                       [delta_d * np.sin(robot_heading)],
-                       [delta_theta]])
-        return x + dx
 
     def H_of(self, x, landmark_pos, rng):
 

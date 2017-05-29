@@ -13,7 +13,7 @@ from Motors import odometry as odom
 from Landmarks import find_landmark as Landmarks
 from Camera import PiVideoStream
 from SocketClient import SocketClient
-import Measure as distcal
+from Measure import pixelCalibrate
 import Vision as Vision
 import Motors as Motors
 import numpy as np
@@ -23,15 +23,26 @@ import cv2
 
 class robot(object):
 
-	def __init__(self, std_vel, std_steer):
+	def __init__(self, std_vel, std_steer, dt):
 		self.std_vel = std_vel
 		self.std_steer = std_steer
 		self.max_angular = std_vel - std_steer
 		self.wheelbase = 0.15
+        self.odom = odom(self.wheelbase)
+        self.PID = PID(40,0.0,0.0) #P, I, D
+        self.client = SocketClient()
+        self.dt = dt
+        self.stream = PiVideoStream() #start the video stream on a seperate thread
+        self.measure = pixelCalibrate(1200,90) #calibrate the camera for distances
 
 	def update_pose(self, current_pose):
-
 		self.x = self.x + current_pose
+
+    def ekf_predict(self, xjac, ujac, R, robot_pose, landmarks):
+        #MOVEMENT
+        self.x = self.x + robot_pose
+
+
 
 def contain_pi(theta):
 	'''
@@ -45,55 +56,51 @@ def contain_pi(theta):
 		theta -= 2 * np.pi
 	return theta
 
-def find_landmark(ID,Stream,Measure):
+def find_landmark(Stream,Measure):
 
-	img = Stream.read()
+    #scan each color pattern in the current frame to try and find a landmark
+    for i in range(5):
+    	img = Stream.read()
 
-	detectRed = Vision.get_blob('red', img)
-	red_blobs = []
-	red_blobs = detectRed.getMultipleFeatures(160,240)
+    	detectRed = Vision.get_blob('red', img)
+    	red_blobs = []
+    	red_blobs = detectRed.getMultipleFeatures(160,240)
 
-	detectGreen = Vision.get_blob('green', img)
-	green_blobs = []
-	green_blobs = detectGreen.getMultipleFeatures(160,240)
+    	detectGreen = Vision.get_blob('green', img)
+    	green_blobs = []
+    	green_blobs = detectGreen.getMultipleFeatures(160,240)
 
-	detectBlue = Vision.get_blob('blue', img)
-	blue_blobs = []
-	blue_blobs = detectBlue.getMultipleFeatures(160,240)
+    	detectBlue = Vision.get_blob('blue', img)
+    	blue_blobs = []
+    	blue_blobs = detectBlue.getMultipleFeatures(160,240)
 
-	get_landmark = Landmarks(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
+    	get_landmark = Landmarks(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
+    	landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(i)
 
-	landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(ID)
+    	detectGreen.drawMultipleFeatures(green_blobs)
+    	detectRed.drawMultipleFeatures(red_blobs)
+    	detectBlue.drawMultipleFeatures(blue_blobs)
+    	cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 
-	detectGreen.drawMultipleFeatures(green_blobs)
-	detectRed.drawMultipleFeatures(red_blobs)
-	detectBlue.drawMultipleFeatures(blue_blobs)
-	cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
+    	cv2.imshow('image', img)
 
-	#print(landmark_bearing)
+    	if not (landmark_bearing == 0):
+    		landmark_range = Measure.distance_to_camera(landmark_marker[1][0])
+    		return np.array([[landmark_range, landmark_bearing, i]]).T
 
-	cv2.imshow('image', img)
-
-	if not (landmark_bearing == 0):
-		landmark_range = Measure.distance_to_camera(landmark_marker[1][0])
-		return np.array([[landmark_range, landmark_bearing]]).T
-	else:
-		return np.array([[0.0, 0.0]]).T
-
-def drive_relative(x, y, robot, PID, robot_odom, dt, client):
+def drive_relative(x, y, robot):
 	'''
-	Drive to a given global position
+	Drive relative to the robot's coordinate frame
 	inputs: x, y
 	'''
 
 	#have we reached our goal?
 	if robot.x[0] < x or robot.x[1] < y:
 		#print('[SLAMBOT] Goal not reached, moving robot')
-		robot_odom.set_initial()
+		robot.odom.set_initial()
 		heading = (np.arctan2(y - robot.x[1], x - robot.x[0])) - robot.x[2] #in radians
-		print(heading)
 		# the output of our pid represents a signed number depending on the direction we are turning
-		pid_return = abs(PID.update(heading)) #abs so that our motors dont travel in reverse direction
+		pid_return = abs(robot.PID.update(heading)) #abs so that our motors dont travel in reverse direction
 		#limit to robots maximum angular velocity
 		if pid_return > robot.std_steer:
 			pid_return = robot.std_steer
@@ -108,59 +115,53 @@ def drive_relative(x, y, robot, PID, robot_odom, dt, client):
 	else:
 		Motors.driveMotors(0,0)
 
-	client.send(robot.x)
-
-	time.sleep(dt)
-
-	current_pose = robot_odom.update(robot.x[2])
+	robot.client.send(robot.x)
+	time.sleep(robot.dt)
+	current_pose = robot.odom.update(robot.x[2])
 	robot.update_pose(current_pose)
+
+def drive_path(path, robot):
+    drive_relative(path[0][0],path[0][1],robot)
+
+def run_localization(robot):
+
+    path = np.array([[1.5,0.5],[1.5,1.5],[0.5,1.0]])
+    drive_path(path, robot)
+    #sensor = find_landmark(Stream,Measure)
+
+def shutdown(robot):
+	robot.stream.stop()
+	print('[SLAMBOT] Shutting down...')
+	robot.client.sock.close()
+	Motors.driveMotors(0,0)
+	sys.exit()
 
 
 if __name__ == "__main__":
 
 	print('[SLAMBOT] Starting main program')
 	print('[SLAMBOT] Warming up the camera')
-	Stream = PiVideoStream().start() #start the video stream on a seperate thread
+
+	robot = robot(std_vel=40, std_steer=30, dt=0.25) #speed units are in a scaled from 0 to 100
+	robot.x = np.array([[0.0, 0.0, 0.0]]).T #robot_x, robot_y, robot_theta ROBOT INITALS
+	robot.client.connect() #Start the python socket
+    robot.stream.start() #Start the camera
 	time.sleep(2.0) #allow camera to warm up
-	print('[SLAMBOT] Calibrating distances')
-	Measure = distcal.pixelCalibrate(1200,90) #calibrate the camera for distances
 
 	print('[SLAMBOT] initializing the motors')
-	Motors.init() #setup the motors
-	PID = PID(40,0.0,0.0) #P, I, D
-
-	robot = robot(std_vel=40, std_steer=30) #speed units are in a scaled from 0 to 100
-	robot.x = np.array([[0.0, 0.0, 0.0]]).T #robot_x, robot_y, robot_theta
-	robot_odom = odom(robot.wheelbase)
-
-	client = SocketClient()
-	client.connect()
-
-	dt = 0.25 # TIME STEP IN HZ
+	Motors.init() #Init the motors
 
 	print('[SLAMBOT] Initialization complete, starting')
 
 	while True:
 
 		try:
-			drive_relative(1.0, 0.0, robot, PID, robot_odom, dt, client) #units are in meters
-			#for i in range(2):
-			#	sensor = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
-			#	if not (sensor[0] == 0) and not (sensor[1] == 0): #landmark found
-			#		print('[SLAMBOT] Found landmark: %s\n' % i)
-			#		print(sensor)
+			run_localization(robot)
 
-			k = cv2.waitKey(1)
-			if k%256 == 27:
-				Stream.stop()
-				print('[SLAMBOT] Shutting down...')
-				client.sock.close()
-				Motors.driveMotors(0,0)
-				sys.exit()
+            #END OF PROGRAM HANDLERS
+        	k = cv2.waitKey(1)
+        	if k%256 == 27:
+                shutdown(robot)
 
 		except KeyboardInterrupt:
-			Stream.stop()
-			print('[SLAMBOT] Shutting down...')
-			client.sock.close()
-			Motors.driveMotors(0,0)
-			sys.exit()
+            shutdown(robot)
