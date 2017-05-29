@@ -10,7 +10,7 @@ Main SLAM Implementation
 #from EKF import RobotEKF as ekf
 from PID import pidcontrol as PID
 from Motors import odometry as odom
-from Landmarks import find_landmark as findL
+from Landmarks import find_landmark as Landmarks
 from Camera import PiVideoStream
 from SocketClient import SocketClient
 import Measure as distcal
@@ -19,6 +19,7 @@ import Motors as Motors
 import numpy as np
 import time
 import sys
+import cv2
 
 class robot(object):
 
@@ -60,17 +61,24 @@ def find_landmark(ID,Stream,Measure):
 	blue_blobs = []
 	blue_blobs = detectBlue.getMultipleFeatures(160,240)
 
-	get_landmark = Landmarks.findL(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
+	get_landmark = Landmarks(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
 
 	landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(ID)
-
+	
+	detectGreen.drawMultipleFeatures(green_blobs)
+	detectRed.drawMultipleFeatures(red_blobs)
+	detectBlue.drawMultipleFeatures(blue_blobs)
+	cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
+	
+	#print(landmark_bearing)
+	
+	cv2.imshow('image', img)
+	
 	if not (landmark_bearing == 0):
 		landmark_range = Measure.distance_to_camera(landmark_marker[1][0])
 		return np.array([[landmark_range, landmark_bearing]]).T
 	else:
-		# print('[SLAMBOT][ERROR] Landmark cannot be seen')
 		return np.array([[0.0, 0.0]]).T
-
 
 def drive_relative(x, y, robot, PID, robot_odom, dt, client):
 	'''
@@ -132,14 +140,17 @@ if __name__ == "__main__":
 	print('[SLAMBOT] Initialization complete, starting')
 
 	while True:
-		try:
-			#drive_relative(1.0, 0.8, robot, PID, robot_odom, dt, client) #units are in meters
-			for i in range(2):
-			    range_bearing = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
-			    if (range_bearing[0] > 0) and (range_bearing[1] > 0): #landmark found
-			        print('[SLAMBOT] Found landmark: %s\n' % i)
-			        print(range_bearing)
-		except KeyboardInterrupt:
+		#drive_relative(1.0, 0.8, robot, PID, robot_odom, dt, client) #units are in meters
+		for i in range(2):
+			sensor = find_landmark(i,Stream,Measure) #find landmark 1 using the VS video stream
+			if not (sensor[0] == 0) and not (sensor[1] == 0): #landmark found
+				print('[SLAMBOT] Found landmark: %s\n' % i)
+				print(sensor)
+		
+		k = cv2.waitKey(1)
+		if k%256 == 27:
+			vs.stop()
 			print('[SLAMBOT] Shutting down...')
 			client.sock.close()
 			Motors.driveMotors(0,0)
+			sys.exit()

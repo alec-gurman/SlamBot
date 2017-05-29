@@ -89,7 +89,7 @@ class get_blob(object):
 				self.area_rect = cv2.minAreaRect(cnts)
 				if self.cx > 0 and self.cy > 0:
 					goal_rad = np.arctan2(self.cy - robot_y, self.cx - robot_x)
-					self.goal_angle = np.degrees(goal_rad)
+					self.goal_angle = goal_rad
 				else:
 					self.goal_angle = 0
 				current_contour.append(self.area)

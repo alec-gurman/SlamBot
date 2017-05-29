@@ -6,6 +6,7 @@ class find_landmark(object):
 		self.red_blobs = red
 		self.green_blobs = green
 		self.blue_blobs = blue
+		self.landmark_bearing = 0
 		self.landmark_cx = 0
 		self.landmark_cy = 0
 		self.landmark_area = 0
@@ -56,7 +57,7 @@ class find_landmark(object):
 									current_cx = g_blob[1]
 									if current_cy > middle_cy:
 										if abs(current_cx - middle_cx) < 10:
-											self.landmark_bearing = b_blob[8]
+											self.landmark_bearing = r_blob[8]
 											self.landmark_cx = middle_cx
 											self.landmark_cy = middle_cy
 											self.landmark_area = r_blob[0]
