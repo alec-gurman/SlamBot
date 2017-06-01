@@ -148,7 +148,7 @@ def run_localization(robot):
 	robot.ekf_predict() #run the prediction step
 	#FOR EACH LANDMARK DO THE FOLLOWING
 	if robot.state == 1:
-		Motors.driveMotors(-40,40);
+		Motors.driveMotors(-30,30);
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
