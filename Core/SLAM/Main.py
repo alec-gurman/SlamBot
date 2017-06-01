@@ -83,12 +83,12 @@ def update_motion_jacobians(current_pose, delta_d):
 	#Update the motion model jacobians
 	robot.xjac = np.concatenate((top_xjac,bottom_xjac))
 	robot.ujac = np.concatenate((UJacobianR,np.zeros(((2 * n), 2))))
-	
+
 def update_motion_model():
-	
+
 	time.sleep(robot.dt)
 	robot.send() #send the robot data before the update
-	
+
 	current_pose, delta_d = robot.odom.update(robot.x[2]) #update the odometry data
 	robot.update_pose(current_pose) #update the robot's pose
 	update_motion_jacobians(current_pose, delta_d) #update the motion jacobians
@@ -119,7 +119,7 @@ def drive_relative(x, y, robot):
 	else:
 		Motors.driveMotors(0,0)
 		return True
-		
+
 	return False
 
 def landmark_init(robot, sensor):
@@ -137,13 +137,13 @@ def landmark_init(robot, sensor):
 		robot.sigma = np.concatenate(((np.concatenate((robot.sigma,zsigma_zeros),axis=0)),(np.concatenate((zsigma_zeros.T,landmark_sigma),axis=0))),axis=1)
 
 def run_localization(robot):
-	
+
 	robot.odom.set_initial() #set initial odom
 	#MAKE A MOVE
 	if robot.state == 0:
 		path = drive_relative(0.9,0.9, robot)
 		if path: robot.state = 1
-		
+
 	update_motion_model()
 	robot.ekf_predict() #run the prediction step
 	#FOR EACH LANDMARK DO THE FOLLOWING
@@ -154,9 +154,12 @@ def run_localization(robot):
 			landmark_init(robot, sensor) #check for any new landmarks
 			#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
 		if len(robot.landmarks) >= 3:
-			Motors.driveMotors(0,0)
+			robot.state = 2:
+
+	if robot.state == 2:
+		Motors.driveMotors(0,0);
 	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP
-	
+
 def shutdown(robot):
 	robot.stream.stop()
 	print('[SLAMBOT] Shutting down...')
