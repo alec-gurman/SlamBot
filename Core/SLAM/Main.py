@@ -138,17 +138,16 @@ def landmark_init(robot, sensor):
 def run_localization(robot):
 
 	path = drive_relative(0.9,0.9, robot) #make a move
-	if path: shutdown(robot) #check when path is finished
 	robot.ekf_predict() #run the prediction step
 	#FOR EACH LANDMARK DO THE FOLLOWING
-	if robot.update > 10:
+	if path: 
+		driveMotors(-30,30);
 		for i in range(5):
-			pass
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
 			#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
-		robot.update = 0
-	robot.update += 1
+		if len(robot.landmarks) >= 3:
+			shutdown(robot)
 	
 def shutdown(robot):
 	robot.stream.stop()

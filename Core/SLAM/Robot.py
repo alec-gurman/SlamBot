@@ -31,7 +31,7 @@ class robot(object):
 		self.Q = np.diag([0.1, 0.1])
 		self.current_path = 0
 		self.debug = False
-		self.update = 10
+		self.update = 0
 		self.stream = PiVideoStream() #start the video stream on a seperate thread
 		self.measure = pixelCalibrate(1200,90) #calibrate the camera for distances
 
