@@ -32,6 +32,7 @@ class robot(object):
 		self.current_path = 0
 		self.debug = False
 		self.update = 0
+		self.state = 0
 		self.stream = PiVideoStream() #start the video stream on a seperate thread
 		self.measure = pixelCalibrate(1200,90) #calibrate the camera for distances
 
