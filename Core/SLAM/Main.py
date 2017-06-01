@@ -9,59 +9,18 @@ Main SLAM Implementation
 #from Draw import Draw as Draw
 #from EKF import RobotEKF as ekf
 from PID import pidcontrol as PID
+from Robot import robot
 from Motors import odometry as odom
 from Landmarks import find_landmark as Landmarks
 from Camera import PiVideoStream
 from SocketClient import SocketClient
 from Measure import pixelCalibrate
-from filterpy.kalman import ExtendedKalmanFilter as EKF
 import Vision as Vision
 import Motors as Motors
 import numpy as np
 import time
 import sys
 import cv2
-
-class robot(object):
-
-	def __init__(self, std_vel, std_steer, dt):
-		EKF.__init__(self, 3, 2, 2)
-		self.std_vel = std_vel
-		self.std_steer = std_steer
-		self.max_angular = std_vel - std_steer
-		self.wheelbase = 0.15
-		self.odom = odom(self.wheelbase)
-		self.PID = PID(40,0.0,0.0) #P, I, D
-		self.client = SocketClient()
-		self.dt = dt
-		self.landmarks = []
-		self.R = np.diag([0.1, 0.1])
-		self.Q = np.diag([0.1, 0.1])
-		self.current_path = 0
-		self.stream = PiVideoStream() #start the video stream on a seperate thread
-		self.measure = pixelCalibrate(1200,90) #calibrate the camera for distances
-
-	def update_pose(self, current_pose):
-		self.x = self.x + current_pose
-
-	def ekf_predict(self, landmarks):
-
-		n = len(self.landmarks)
-		#PREDICT ROBOT POSE
-		self.u[0] = self.x[0]
-        self.u[1] = self.x[1]
-        self.u[2] = self.x[2]
-
-		#COVARIANCE
-		self.sigma = dot(self.xjac, self.sigma).dot(self.xjac.T) + dot(self.ujac, self.R).dot(self.ujac.T)
-		self.sigma = np.matrix([[self.sigma],[np.zeros()]])
-
-	def send(self):
-
-		message = self.u
-		self.client.send(message)
-
-
 
 def contain_pi(theta):
 	'''
@@ -159,39 +118,29 @@ def drive_relative(x, y, robot):
 
 	return False
 
-def drive_path(path, robot):
-	current_path = drive_relative(path[robot.current_path][0],path[robot.current_path][1],robot)
-	print(robot.current_path)
-	if current_path:
-		if robot.current_path < (len(path) - 1):
-			robot.current_path = robot.current_path + 1
-		else:
-			shutdown(robot)
+def landmark_init(robot):
+
+	sensor = find_landmark(robot)
+
+	if (not(sensor == False)) and (sensor[2] not in robot.landmarks):
+		#expanded the state vector
+		robot.u[(3 + robot.landmarks[sensor[2]] * 2)] = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
+		robot.u[(4 + robot.landmarks[sensor[2]] * 2)] = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
+		robot.landmarks.append(sensor[2]) #add the landmark to known landmark matrix
+		robot.zjac = np.array([[np.cos(robot.x[2] + sensor[1]), -sensor[0] * (np.sin(robot.x[2] + sensor[1]))],
+							   [np.sin(robot.x[2] + sensor[1]), sensor[0] * (np.cos(robot.x[2] + sensor[1]))]])
+		landmark_sigma = dot(robot.zjac,robot.Q).dot(robot.zjac.T)
+		zsigma_zeros = np.zeros((2,len(robot.sigma)))
+		#expanded the covariance
+		robot.sigma = np.concatenate(((np.concatenate((robot.sigma,zsigma_zeros),axis=0)),(np.concatenate((zsigma_zeros.T,landmark_sigma),axis=0))),axis=1)
 
 def run_localization(robot):
 
 	path = drive_relative(0.9,0.9, robot) #make a move
-	robot.ekf_predict()
 	if path: shutdown(robot) #check when path is finished
-	sensor = find_landmark(robot) #find any landmarks
-	if not(sensor == False):
-		if sensor[2] not in robot.landmarks:
-			#expanded the state vector
-			robot.u[(3 + robot.landmarks[sensor[2]] * 2)] = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
-			robot.u[(4 + robot.landmarks[sensor[2]] * 2)] = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
-			robot.landmarks.append(sensor[2])
-			n = len(robot.landmarks)
-			robot.zjac = np.array([[np.cos(robot.x[2] + sensor[1]), -sensor[0] * (np.sin(robot.x[2] + sensor[1]))],
-								   [np.sin(robot.x[2] + sensor[1]), sensor[0] * (np.cos(robot.x[2] + sensor[1]))]])
-			landmark_sigma = dot(robot.zjac,robot.Q).dot(robot.zjac.T)
-			zsigma_zeros = np.zeros((2,(2 * n) + 1))
-			robot.zsigma = np.concatenate(((np.concatenate((robot.sigma,zsigma_zeros),axis=0)),(np.concatenate((zsigma_zeros.T,landmark_sigma),axis=0))),axis=1)
-			robot.sigma = robot.zsigma #expanded the covariance
-
-	#UPDATE STEP
-
-
-
+	robot.ekf_predict() #run the prediction step
+	landmark_init(robot) #check for any new landmarks
+	robot.ekf_update()
 
 
 def shutdown(robot):
@@ -218,7 +167,7 @@ if __name__ == "__main__":
 	print('[SLAMBOT] initializing the motors')
 	Motors.init() #Init the motors
 
-	print('[SLAMBOT] Initialization complete, starting')
+	print('[SLAMBOT] Initialization complete, starting...')
 
 	while True:
 
