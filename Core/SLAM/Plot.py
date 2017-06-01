@@ -32,8 +32,8 @@ if __name__ == '__main__':
                 plt.scatter(data[0],data[1],marker=(3, 0, math.degrees(data[2])+26), color='b', s=200)
                 plt.scatter(data[0],data[1],marker=axis_marker, color='r',s=300)
                 for i in range(5):
-                    if not (data[(3 + (i * 2))] == 0) and (data[(4 + (i * 2))] == 0):
-                        plt.scatter(data[3 + data[i] * 2],data[4 + data[i] * 2],marker=(8,2,0),color='k',s=250)
+                    if (data[(3 + (i * 2))] > 0) and (data[(4 + (i * 2))] > 0):
+                        plt.scatter(data[3 + (i * 2)],data[4 + (i * 2)],marker=(8,2,0),color='k',s=250)
                 plt.pause(0.5)
         except KeyboardInterrupt:
             server.sock.close()
