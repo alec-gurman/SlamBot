@@ -8,16 +8,13 @@ Main SLAM Implementation
 
 #from Draw import Draw as Draw
 #from EKF import RobotEKF as ekf
-from PID import pidcontrol as PID
 from Robot import robot
-from Motors import odometry as odom
 from Landmarks import find_landmark as Landmarks
-from Camera import PiVideoStream
-from SocketClient import SocketClient
-from Measure import pixelCalibrate
+from numpy import dot
 import Vision as Vision
 import Motors as Motors
 import numpy as np
+import math
 import time
 import sys
 import cv2
@@ -63,20 +60,20 @@ def find_landmark(robot, ID):
 		cv2.imshow('image', img)
 
 	if not (landmark_bearing == 0):
-		landmark_range = robot.measure.distance_to_camera(landmark_marker[1][0])
-		return np.array([[landmark_range, landmark_bearing, i]]).T
+		landmark_range = robot.measure.distance_to_camera(landmark_marker[1][0]) / 100
+		return np.array([[landmark_range, landmark_bearing, ID]]).T
 
-	return False
+	return np.array([[0.0, 0.0, 0]]).T
 
 def update_motion_jacobians(current_pose, delta_d):
 
-    XJacobianR = np.matrix([[1, 0, (-delta_d*math.sin(current_pose[2]))],
-                          [0, 1, (delta_d*math.cos(current_pose[2]))],
-                          [0, 0, 1]])
+	XJacobianR = np.matrix([[1, 0, (-delta_d*math.sin(current_pose[2]))],
+						  [0, 1, (delta_d*math.cos(current_pose[2]))],
+						  [0, 0, 1]])
 
-    UJacobianR = np.matrix([[(math.cos(current_pose[2])), 0],
-                          [(math.sin(current_pose[2])), 0],
-                          [0, 1]])
+	UJacobianR = np.matrix([[(math.cos(current_pose[2])), 0],
+						  [(math.sin(current_pose[2])), 0],
+						  [0, 1]])
 
 	n = len(robot.landmarks)
 
@@ -115,8 +112,9 @@ def drive_relative(x, y, robot):
 		return True
 		Motors.driveMotors(0,0)
 
+	time.sleep(robot.dt)
 	robot.send() #send the robot data before the update
-	#time.sleep(robot.dt)
+	
 	current_pose, delta_d = robot.odom.update(robot.x[2]) #update the odometry data
 	robot.update_pose(current_pose) #update the robot's pose
 	update_motion_jacobians(current_pose, delta_d) #update the motion jacobians
@@ -125,13 +123,13 @@ def drive_relative(x, y, robot):
 
 def landmark_init(robot, sensor):
 
-	if (not(sensor == False)) and (sensor[2] not in robot.landmarks):
+	if (not(sensor[0] == 0.0 and sensor[1] == 0.0 and sensor[2] == 0)) and (sensor[2] not in robot.landmarks):
 		#expanded the state vector
 		robot.landmarks.append(sensor[2]) #add the landmark to known landmark matrix
-		robot.u[(3 + (sensor[2] * 2))] = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
-		robot.u[(4 + (sensor[2] * 2))] = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
-		robot.zjac = np.array([[np.cos(robot.x[2] + sensor[1]), -sensor[0] * (np.sin(robot.x[2] + sensor[1]))],
-							   [np.sin(robot.x[2] + sensor[1]), sensor[0] * (np.cos(robot.x[2] + sensor[1]))]])
+		robot.u[int(3 + (sensor[2] * 2))] = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
+		robot.u[int(4 + (sensor[2] * 2))] = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
+		robot.zjac = np.array([[float(np.cos(robot.x[2] + sensor[1])), float(-sensor[0] * (np.sin(robot.x[2] + sensor[1])))],
+							   [float(np.sin(robot.x[2] + sensor[1])), float(sensor[0] * (np.cos(robot.x[2] + sensor[1])))]])
 		landmark_sigma = dot(robot.zjac,robot.Q).dot(robot.zjac.T)
 		zsigma_zeros = np.zeros((2,len(robot.sigma)))
 		#expanded the covariance
@@ -143,12 +141,15 @@ def run_localization(robot):
 	if path: shutdown(robot) #check when path is finished
 	robot.ekf_predict() #run the prediction step
 	#FOR EACH LANDMARK DO THE FOLLOWING
-	for i in range(5):
-		sensor = find_landmark(robot, i)
-		landmark_init(robot, sensor) #check for any new landmarks
-		#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
-
-
+	if robot.update > 10:
+		for i in range(5):
+			pass
+			sensor = find_landmark(robot, i)
+			landmark_init(robot, sensor) #check for any new landmarks
+			#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
+		robot.update = 0
+	robot.update += 1
+	
 def shutdown(robot):
 	robot.stream.stop()
 	print('[SLAMBOT] Shutting down...')
@@ -164,7 +165,7 @@ if __name__ == "__main__":
 
 	robot = robot(std_vel=40, std_steer=30, dt=0.25) #speed units are in a scaled from 0 to 100
 	robot.x = np.zeros((3,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
-    robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
+	robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.sigma = np.identity(3)
 	robot.client.connect() #Start the python socket
 	robot.stream.start() #Start the camera
