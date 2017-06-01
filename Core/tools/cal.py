@@ -8,7 +8,7 @@ import cv2 #opencv
 #setup the camera
 
 camera = PiCamera()
-camera.resolution = (320,240)
+camera.resolution = (640,480)
 camera.framerate = 24
 camera.sensor_mode = 3
 camera.rotation = 90
@@ -21,7 +21,7 @@ camera.exposure_mode = 'off'
 camera.brightness = 50
 camera.saturation = 50 #brighter colours
 camera.ISO = 100
-rawCapture = PiRGBArray(camera, size=(320,240))
+rawCapture = PiRGBArray(camera, size=(640,480))
 
 img_counter = 0
 dirname = 'calibration'
