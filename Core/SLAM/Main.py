@@ -33,41 +33,59 @@ def contain_pi(theta):
 		theta -= 2 * np.pi
 	return theta
 
-def find_landmark(robot):
+def find_landmark(robot, ID):
 
 	#scan each color pattern in the current frame to try and find a landmark
-	for i in range(5):
-		img = robot.stream.read()
+	img = robot.stream.read()
 
-		detectRed = Vision.get_blob('red', img)
-		red_blobs = []
-		red_blobs = detectRed.getMultipleFeatures(160,240)
+	detectRed = Vision.get_blob('red', img)
+	red_blobs = []
+	red_blobs = detectRed.getMultipleFeatures(160,240)
 
-		detectGreen = Vision.get_blob('green', img)
-		green_blobs = []
-		green_blobs = detectGreen.getMultipleFeatures(160,240)
+	detectGreen = Vision.get_blob('green', img)
+	green_blobs = []
+	green_blobs = detectGreen.getMultipleFeatures(160,240)
 
-		detectBlue = Vision.get_blob('blue', img)
-		blue_blobs = []
-		blue_blobs = detectBlue.getMultipleFeatures(160,240)
+	detectBlue = Vision.get_blob('blue', img)
+	blue_blobs = []
+	blue_blobs = detectBlue.getMultipleFeatures(160,240)
 
-		get_landmark = Landmarks(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
-		landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(i)
+	get_landmark = Landmarks(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
+	landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(ID)
 
-		if(robot.debug):
+	if(robot.debug):
 
-			detectGreen.drawMultipleFeatures(green_blobs)
-			detectRed.drawMultipleFeatures(red_blobs)
-			detectBlue.drawMultipleFeatures(blue_blobs)
-			cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
+		detectGreen.drawMultipleFeatures(green_blobs)
+		detectRed.drawMultipleFeatures(red_blobs)
+		detectBlue.drawMultipleFeatures(blue_blobs)
+		cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
 
-			cv2.imshow('image', img)
+		cv2.imshow('image', img)
 
-		if not (landmark_bearing == 0):
-			landmark_range = robot.measure.distance_to_camera(landmark_marker[1][0])
-			return np.array([[landmark_range, landmark_bearing, i]]).T
+	if not (landmark_bearing == 0):
+		landmark_range = robot.measure.distance_to_camera(landmark_marker[1][0])
+		return np.array([[landmark_range, landmark_bearing, i]]).T
 
-		return False
+	return False
+
+def update_motion_jacobians(current_pose, delta_d):
+
+    XJacobianR = np.matrix([[1, 0, (-delta_d*math.sin(current_pose[2]))],
+                          [0, 1, (delta_d*math.cos(current_pose[2]))],
+                          [0, 0, 1]])
+
+    UJacobianR = np.matrix([[(math.cos(current_pose[2])), 0],
+                          [(math.sin(current_pose[2])), 0],
+                          [0, 1]])
+
+	n = len(robot.landmarks)
+
+	top_xjac  = np.concatenate((XJacobianR, np.zeros((3,(2 * n)))), axis=1)
+	bottom_xjac = np.concatenate((np.zeros(((2 * n), 3)), np.identity(2 * n)), axis=1)
+
+	#Update the motion model jacobians
+	robot.xjac = np.concatenate((top_xjac,bottom_xjac))
+	robot.ujac = np.concatenate((UJacobianR,np.zeros(((2 * n), 2))))
 
 def drive_relative(x, y, robot):
 	'''
@@ -97,38 +115,21 @@ def drive_relative(x, y, robot):
 		return True
 		Motors.driveMotors(0,0)
 
-	robot.send()
+	robot.send() #send the robot data before the update
 	#time.sleep(robot.dt)
-	current_pose, delta_d = robot.odom.update(robot.x[2])
-	robot.update_pose(current_pose)
-
-    XJacobianR = np.matrix([[1, 0, (-delta_d*math.sin(current_pose[2]))],
-                          [0, 1, (delta_d*math.cos(current_pose[2]))],
-                          [0, 0, 1]])
-
-    UJacobianR = np.matrix([[(math.cos(current_pose[2])), 0],
-                          [(math.sin(current_pose[2])), 0],
-                          [0, 1]])
-
-	n = len(robot.landmarks)
-
-	top_xjac  = np.concatenate((XJacobianR, np.zeros((3,(2 * n)))), axis=1)
-	bottom_xjac = np.concatenate((np.zeros(((2 * n), 3)), np.identity(2 * n)), axis=1)
-
-	robot.xjac = np.concatenate((top_xjac,bottom_xjac))
-	robot.ujac = np.concatenate((UJacobianR,np.zeros(((2 * n), 2))))
+	current_pose, delta_d = robot.odom.update(robot.x[2]) #update the odometry data
+	robot.update_pose(current_pose) #update the robot's pose
+	update_motion_jacobians(current_pose, delta_d) #update the motion jacobians
 
 	return False
 
-def landmark_init(robot):
-
-	sensor = find_landmark(robot)
+def landmark_init(robot, sensor):
 
 	if (not(sensor == False)) and (sensor[2] not in robot.landmarks):
 		#expanded the state vector
-		robot.u[(3 + robot.landmarks[sensor[2]] * 2)] = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
-		robot.u[(4 + robot.landmarks[sensor[2]] * 2)] = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
 		robot.landmarks.append(sensor[2]) #add the landmark to known landmark matrix
+		robot.u[(3 + (sensor[2] * 2))] = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
+		robot.u[(4 + (sensor[2] * 2))] = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
 		robot.zjac = np.array([[np.cos(robot.x[2] + sensor[1]), -sensor[0] * (np.sin(robot.x[2] + sensor[1]))],
 							   [np.sin(robot.x[2] + sensor[1]), sensor[0] * (np.cos(robot.x[2] + sensor[1]))]])
 		landmark_sigma = dot(robot.zjac,robot.Q).dot(robot.zjac.T)
@@ -141,8 +142,11 @@ def run_localization(robot):
 	path = drive_relative(0.9,0.9, robot) #make a move
 	if path: shutdown(robot) #check when path is finished
 	robot.ekf_predict() #run the prediction step
-	landmark_init(robot) #check for any new landmarks
-	robot.ekf_update()
+	#FOR EACH LANDMARK DO THE FOLLOWING
+	for i in range(5):
+		sensor = find_landmark(robot, i)
+		landmark_init(robot, sensor) #check for any new landmarks
+		#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
 
 
 def shutdown(robot):

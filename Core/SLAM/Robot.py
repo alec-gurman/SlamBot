@@ -43,46 +43,45 @@ class robot(object):
 		self.sigma = dot(self.xjac, self.sigma).dot(self.xjac.T) + dot(self.ujac, self.R).dot(self.ujac.T)
 		self.sigma = np.matrix([[self.sigma],[np.zeros()]])
 
-	def ekf_update(self):
+	def ekf_update(self, landmark_id, sensor):
 
 		#UPDATE STEP
 		#We probably want to ditch the kalman filter library
 		#and do the update step here
 
-        H = HJacobian(x, *args)
+      	H = self.H_of(landmark_id, sensor)
 
         S = dot3(H, self.sigma, H.T) + self.Q
         K = dot3(self.sigma, H.T, linalg.inv(S))
 
-        hx =  Hx(x, *hx_args)
-        y = residual(z, hx)
-        self._x = x + dot(K, y)
+        hx =  self.Hx(landmark_id)
+        y = self.residual(sensor, hx)
+        self.u = self.u + dot(K, y)
 
         I_KH = self._I - dot(K, H)
         self._P = dot(I_KH, P)
 
-		raise NotImplementedError
 
 	def send(self):
 
 		message = self.u
 		self.client.send(message)
 
-    def H_of(self, x, landmark_pos, rng):
+    def H_of(self, landmark_id):
 
-        px = landmark_pos[0]
-        py = landmark_pos[1]
-        hyp = rng**2
-        dist = rng
+        px = self.u[(3 + (landmark_id * 2))]
+        py = self.u[(4 + (landmark_id * 2))]
+        hyp = sensor[1]**2
+        dist = sensor[1]
 
         H = np.array([[-(px - x[0, 0]) / dist, -(py - x[1, 0]) / dist, 0],
                       [(py - x[1, 0]) / hyp,  -(px - x[0, 0]) / hyp, -1]])
         return H
 
-    def Hx(self, x, landmark_pos):
+    def Hx(self, landmark_id):
 
-        px = landmark_pos[0]
-        py = landmark_pos[1]
+        px = self.u[(3 + (landmark_id * 2))]
+        py = self.u[(4 + (landmark_id * 2))]
         Hx = np.array([[(np.sqrt((x[0, 0] - px)**2 + (x[1, 0] - py)**2))],
                     [(math.atan2(py - x[1, 0], px - x[0, 0])) - x[2, 0]]])
 
