@@ -6,6 +6,8 @@ MAIN ROBOT CLASS
 
 '''
 
+from filterpy.common import dot3
+
 class robot(object):
 
 	def __init__(self, std_vel, std_steer, dt):
@@ -22,6 +24,7 @@ class robot(object):
 		self.R = np.diag([0.1, 0.1])
 		self.Q = np.diag([0.1, 0.1])
 		self.current_path = 0
+		self.debug = False
 		self.stream = PiVideoStream() #start the video stream on a seperate thread
 		self.measure = pixelCalibrate(1200,90) #calibrate the camera for distances
 
@@ -46,17 +49,10 @@ class robot(object):
 		#We probably want to ditch the kalman filter library
 		#and do the update step here
 
-        P = self._P
-
-        if np.isscalar(z) and self.dim_z == 1:
-            z = np.asarray([z], float)
-
-        x = self._x
-
         H = HJacobian(x, *args)
 
-        S = dot3(H, P, H.T) + R
-        K = dot3(P, H.T, linalg.inv(S))
+        S = dot3(H, self.sigma, H.T) + self.Q
+        K = dot3(self.sigma, H.T, linalg.inv(S))
 
         hx =  Hx(x, *hx_args)
         y = residual(z, hx)

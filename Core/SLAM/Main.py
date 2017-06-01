@@ -54,12 +54,14 @@ def find_landmark(robot):
 		get_landmark = Landmarks(red_blobs,green_blobs,blue_blobs) #initialize the landmarker finder class with our three blobs
 		landmark_bearing, landmark_cx, landmark_cy, landmark_area, landmark_marker = get_landmark.position(i)
 
-		detectGreen.drawMultipleFeatures(green_blobs)
-		detectRed.drawMultipleFeatures(red_blobs)
-		detectBlue.drawMultipleFeatures(blue_blobs)
-		cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
+		if(robot.debug):
 
-		cv2.imshow('image', img)
+			detectGreen.drawMultipleFeatures(green_blobs)
+			detectRed.drawMultipleFeatures(red_blobs)
+			detectBlue.drawMultipleFeatures(blue_blobs)
+			cv2.putText(img, 'Landmark: {}, {}'.format(landmark_cx, landmark_cy), (50,50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0),2,cv2.LINE_AA)
+
+			cv2.imshow('image', img)
 
 		if not (landmark_bearing == 0):
 			landmark_range = robot.measure.distance_to_camera(landmark_marker[1][0])
@@ -96,7 +98,7 @@ def drive_relative(x, y, robot):
 		Motors.driveMotors(0,0)
 
 	robot.send()
-	time.sleep(robot.dt)
+	#time.sleep(robot.dt)
 	current_pose, delta_d = robot.odom.update(robot.x[2])
 	robot.update_pose(current_pose)
 
