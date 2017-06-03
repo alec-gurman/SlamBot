@@ -38,6 +38,8 @@ class robot(object):
 
 	def update_pose(self, current_pose):
 		self.x = self.x + current_pose
+		self.x[2] = contain_pi(self.x[2]) #contain robot theta between pi and - pi
+
 
 	def ekf_predict(self):
 
@@ -56,7 +58,7 @@ class robot(object):
 		#and do the update step here
 
 		H = self.H_of(landmark_id, sensor)
-	  	
+
 		S = (dot(H, self.sigma).dot(H.T)) + self.Q
 		K = dot(self.sigma, H.T).dot(np.linalg.inv(S))
 
@@ -107,3 +109,14 @@ class robot(object):
 		if y[1] > np.pi:             # move to [-pi, pi)
 			y[1] -= 2 * np.pi
 		return y
+
+	def contain_pi(theta):
+		'''
+		Little function to contain an angle between -pi and pi
+		'''
+
+		#WRAP BETWEEN -pi AND pi
+		theta = theta % (2 * np.pi)    # force in range [0, 2 pi)
+		if theta > np.pi:             # move to [-pi, pi)
+			theta -= 2 * np.pi
+		return theta

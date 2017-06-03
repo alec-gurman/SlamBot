@@ -19,17 +19,6 @@ import time
 import sys
 import cv2
 
-def contain_pi(theta):
-	'''
-	Little function to contain an angle between -pi and pi
-	'''
-
-	#WRAP BETWEEN -pi AND pi
-	theta = theta % (2 * np.pi)    # force in range [0, 2 pi)
-	if theta > np.pi:             # move to [-pi, pi)
-		theta -= 2 * np.pi
-	return theta
-
 def find_landmark(robot, ID):
 
 	#scan each color pattern in the current frame to try and find a landmark
