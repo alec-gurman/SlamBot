@@ -27,13 +27,17 @@ if __name__ == '__main__':
         try:
             data = server.recieve()
             if len(data) > 0:
-                #plot the data
-                axis_marker = Draw.draw_axis_marker(math.degrees(data[2]))
-                plt.scatter(data[0],data[1],marker=(3, 0, math.degrees(data[2])+26), color='b', s=200)
-                plt.scatter(data[0],data[1],marker=axis_marker, color='r',s=300)
-                for i in range(5):
-                    if (data[(3 + (i * 2))] > 0) and (data[(4 + (i * 2))] > 0):
-                        plt.scatter(data[3 + (i * 2)],data[4 + (i * 2)],marker=(8,2,0),color='k',s=250)
+                if(len(data) == 13):
+                    #Recived our state vector, Plot
+                    axis_marker = Draw.draw_axis_marker(math.degrees(data[2]))
+                    plt.scatter(data[0],data[1],marker=(3, 0, math.degrees(data[2])+26), color='b', s=200)
+                    plt.scatter(data[0],data[1],marker=axis_marker, color='r',s=300)
+                    for i in range(5):
+                        if (data[(3 + (i * 2))] > 0) and (data[(4 + (i * 2))] > 0):
+                            plt.scatter(data[3 + (i * 2)],data[4 + (i * 2)],marker=(8,2,0),color='k',s=250)
+                else:
+                    #recieved our covariance matrix, Plot covariances
+                    print('[SLAMBOT][DEBUG] Got Covariance Matrix')
                 plt.pause(0.5)
         except KeyboardInterrupt:
             server.sock.close()

@@ -55,24 +55,17 @@ class robot(object):
 	def ekf_update(self, landmark_id, sensor):
 
 		#UPDATE STEP
-		#We probably want to ditch the kalman filter library
-		#and do the update step here
 
 		H = self.H_of(landmark_id, sensor)
 
 		S = (dot(H, self.sigma).dot(H.T)) + self.Q
 		K = dot(self.sigma, H.T).dot(np.linalg.inv(S))
-		#Here we can see the H.T needs to be expanded with the landmarks as self.sigma
-		#is expanded with the landmarks also so to retain symmetry for dot product we must match the
-		#dimensions
 
 		hx =  self.Hx(landmark_id)
 		y = self.residual(sensor, hx)
 		self.u = self.u + dot(K, y)
 
-		#I believe the I Matrix should be a 2x2 identity as the H Jacobian is only 2 rows
-		#This could be wrong. It may need to be the size of number of state variables which is
-		#dependent on number of landmarks currently detected
+		self.I = np.identity((3 + len(self.landmarks))) #the identity expands with N amount of landmarks init
 		I_KH = self.I - dot(K, H)
 		self.sigma = dot(I_KH, self.sigma)
 
@@ -89,11 +82,16 @@ class robot(object):
 		hyp = sensor[0]**2
 		dist = sensor[0]
 
-		#Expand with landmarks?
-		H = np.array([[-(px - x[0, 0]) / dist, -(py - x[1, 0]) / dist, 0],
+		#Expand with landmarks
+		n = len(robot.landmarks)
+		robot_H = np.array([[-(px - x[0, 0]) / dist, -(py - x[1, 0]) / dist, 0],
 					  [(py - x[1, 0]) / hyp,  -(px - x[0, 0]) / hyp, -1]])
+		landmark_H = np.array([[-(px - x[0, 0]) / dist, -(py - x[1, 0]) / dist],
+					  [(py - x[1, 0]) / hyp,  -(px - x[0, 0]) / hyp]])
+		zeros_H_before = np.zeros((2,(2 * landmark_id)))
+		zeros_H_after = np.zeros((2,(2 * (n - 1) - landmark_id))))
+		H = np.concatenate((robot_H,zeros_H_before,landmark_H,zeros_H_after), axis=1)
 
-		self.hjac = False
 		return H
 
 	def Hx(self, landmark_id):

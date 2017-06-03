@@ -148,9 +148,6 @@ def run_localization(robot):
 	if robot.state == 2:
 		Motors.driveMotors(0,0);
 
-	if robot.state == 3:
-		Motors.driveMotors(30,-30);
-
 	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP!!!!????
 
 def shutdown(robot):
@@ -170,8 +167,7 @@ if __name__ == "__main__":
 	robot.x = np.zeros((3,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.xjac = np.zeros((3,3))
-	robot.ujac = np.zeros((3,2))
-	robot.hjac = np.zeros((2,3))
+	robot.ujac = np.zeros((3,2))s
 	robot.sigma = np.identity(3)
 	robot.client.connect() #Start the python socket
 	robot.stream.start() #Start the camera
