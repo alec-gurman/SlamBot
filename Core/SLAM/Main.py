@@ -140,6 +140,7 @@ def run_localization(robot):
 
 	robot.odom.set_initial() #set initial odom
 	#MAKE A MOVE
+	robot.state == 3: #debug state
 	if robot.state == 0:
 		path = drive_relative(0.9,0.9, robot)
 		if path: robot.state = 1
@@ -158,7 +159,11 @@ def run_localization(robot):
 
 	if robot.state == 2:
 		Motors.driveMotors(0,0);
-	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP
+
+	if robot.state == 3:
+		Motors.driveMotors(-30,30);
+
+	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP!!!!????
 
 def shutdown(robot):
 	robot.stream.stop()

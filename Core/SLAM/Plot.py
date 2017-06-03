@@ -3,7 +3,7 @@
 '''
 
 Plotting script which plots data recieved over socket
-via to slambot
+via the slambot
 
 '''
 

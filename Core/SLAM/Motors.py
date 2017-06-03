@@ -58,5 +58,6 @@ class odometry(object):
         self.delta_theta = self.delta_theta % (2 * np.pi)
         if self.delta_theta > np.pi:
            self.delta_theta -= 2 * np.pi
+		print('[SLAMBOT] DELTA THETA: %s' % delta_theta)
         delta_pose = np.array([[self.delta_x, self.delta_y, self.delta_theta]]).T
         return delta_pose, delta_dist
