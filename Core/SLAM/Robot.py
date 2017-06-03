@@ -29,6 +29,7 @@ class robot(object):
 		self.landmarks = []
 		self.R = np.diag([0.1, 0.1])
 		self.Q = np.diag([0.1, 0.1])
+		self.I = np.identity(2)
 		self.current_path = 0
 		self.debug = False
 		self.update = 0
@@ -61,13 +62,19 @@ class robot(object):
 
 		S = (dot(H, self.sigma).dot(H.T)) + self.Q
 		K = dot(self.sigma, H.T).dot(np.linalg.inv(S))
+		#Here we can see the H.T needs to be expanded with the landmarks as self.sigma
+		#is expanded with the landmarks also so to retain symmetry for dot product we must match the
+		#dimensions
 
 		hx =  self.Hx(landmark_id)
 		y = self.residual(sensor, hx)
 		self.u = self.u + dot(K, y)
 
-		I_KH = self._I - dot(K, H)
-		self._P = dot(I_KH, P)
+		#I believe the I Matrix should be a 2x2 identity as the H Jacobian is only 2 rows
+		#This could be wrong. It may need to be the size of number of state variables which is
+		#dependent on number of landmarks currently detected
+		I_KH = self.I - dot(K, H)
+		self.sigma = dot(I_KH, self.sigma)
 
 
 	def send(self):
@@ -75,23 +82,29 @@ class robot(object):
 		message = self.u
 		self.client.send(message)
 
-	def H_of(self, landmark_id):
+	def H_of(self, landmark_id, sensor):
 
 		px = self.u[(3 + (landmark_id * 2))]
 		py = self.u[(4 + (landmark_id * 2))]
-		hyp = sensor[1]**2
-		dist = sensor[1]
+		hyp = sensor[0]**2
+		dist = sensor[0]
 
+		#Expand with landmarks?
 		H = np.array([[-(px - x[0, 0]) / dist, -(py - x[1, 0]) / dist, 0],
 					  [(py - x[1, 0]) / hyp,  -(px - x[0, 0]) / hyp, -1]])
+
+		self.hjac = False
 		return H
 
 	def Hx(self, landmark_id):
 
 		px = self.u[(3 + (landmark_id * 2))]
 		py = self.u[(4 + (landmark_id * 2))]
-		Hx = np.array([[(np.sqrt((x[0, 0] - px)**2 + (x[1, 0] - py)**2))],
-					[(math.atan2(py - x[1, 0], px - x[0, 0])) - x[2, 0]]])
+		robot_x = self.u[0]
+		robot_y = self.u[1]
+		robot_theta = self.u[2]
+		Hx = np.array([[(np.sqrt((robot_x - px)**2 + (robot_y - py)**2))],
+					[(math.atan2(py - robot_y, px - robot_x)) - robot_theta]])
 
 		#WRAP BETWEEN -pi AND pi
 		Hx[1] = Hx[1] % (2 * np.pi)    # force in range [0, 2 pi)

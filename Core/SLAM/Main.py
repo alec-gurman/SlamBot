@@ -90,7 +90,7 @@ def drive_relative(x, y, robot):
 	finished = False
 	#have we reached our goal?
 	if not (((x - 0.05) <= robot.x[0] <= (x + 0.05)) and ((y - 0.05) <= robot.x[1] <= (y + 0.05))):
-		#print('[SLAMBOT] Goal not reached, moving robot')
+		#We shouldn't need to contain this angle as it is simply for a driving system and PID
 		heading = (np.arctan2(y - robot.x[1], x - robot.x[0])) - robot.x[2] #in radians
 		# the output of our pid represents a signed number depending on the direction we are turning
 		pid_return = abs(robot.PID.update(heading)) #abs so that our motors dont travel in reverse direction
@@ -169,6 +169,9 @@ if __name__ == "__main__":
 	robot = robot(std_vel=40, std_steer=30, dt=0.25) #speed units are in a scaled from 0 to 100
 	robot.x = np.zeros((3,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
+	robot.xjac = np.zeros((3,3))
+	robot.ujac = np.zeros((3,2))
+	robot.hjac = np.zeros((2,3))
 	robot.sigma = np.identity(3)
 	robot.client.connect() #Start the python socket
 	robot.stream.start() #Start the camera
