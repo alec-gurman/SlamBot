@@ -38,7 +38,7 @@ class robot(object):
 
 	def update_pose(self, current_pose):
 		self.x = self.x + current_pose
-		self.x[2] = contain_pi(self.x[2]) #contain robot theta between pi and - pi
+		self.x[2] = self.contain_pi(self.x[2]) #contain robot theta between pi and - pi
 
 
 	def ekf_predict(self):
@@ -110,7 +110,7 @@ class robot(object):
 			y[1] -= 2 * np.pi
 		return y
 
-	def contain_pi(theta):
+	def contain_pi(self, theta):
 		'''
 		Little function to contain an angle between -pi and pi
 		'''

@@ -129,7 +129,6 @@ def run_localization(robot):
 
 	robot.odom.set_initial() #set initial odom
 	#MAKE A MOVE
-	robot.state = 3 #debug state
 	if robot.state == 0:
 		path = drive_relative(0.9,0.9, robot)
 		if path: robot.state = 1
