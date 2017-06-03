@@ -29,7 +29,7 @@ class robot(object):
 		self.landmarks = []
 		self.R = np.diag([0.1, 0.1])
 		self.Q = np.diag([0.1, 0.1])
-		self.I = np.identity(2)
+		self.I = np.identity(3) #inital robot_x , robot_y, robot_theta state vector?
 		self.current_path = 0
 		self.debug = False
 		self.update = 0
@@ -79,8 +79,8 @@ class robot(object):
 
 	def send(self):
 
-		message = self.u
-		self.client.send(message)
+		self.client.send(self.u) #send the state vector array
+		#self.client.send(self.sigma) #send the covariance array
 
 	def H_of(self, landmark_id, sensor):
 
