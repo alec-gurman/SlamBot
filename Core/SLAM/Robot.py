@@ -21,9 +21,9 @@ class robot(object):
 		self.std_vel = std_vel
 		self.std_steer = std_steer
 		self.max_angular = std_vel - std_steer
-		self.wheelbase = 0.15
+		self.wheelbase = 0.1225
 		self.odom = odom(self.wheelbase)
-		self.PID = PID(40,0.0,0.0) #P, I, D
+		self.PID = PID(50,0.0,0.0) #P, I, D
 		self.client = SocketClient()
 		self.dt = dt
 		self.landmarks = []
@@ -89,7 +89,7 @@ class robot(object):
 		landmark_H = np.array([[-(px - x[0, 0]) / dist, -(py - x[1, 0]) / dist],
 					  [(py - x[1, 0]) / hyp,  -(px - x[0, 0]) / hyp]])
 		zeros_H_before = np.zeros((2,(2 * landmark_id)))
-		zeros_H_after = np.zeros((2,(2 * (n - 1) - landmark_id))))
+		zeros_H_after = np.zeros((2,((2 * (n - 1)) - landmark_id)))
 		H = np.concatenate((robot_H,zeros_H_before,landmark_H,zeros_H_after), axis=1)
 
 		return H

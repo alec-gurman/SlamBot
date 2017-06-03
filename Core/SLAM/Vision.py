@@ -89,7 +89,7 @@ class get_blob(object):
 				self.area_rect = cv2.minAreaRect(cnts)
 				if self.cx > 0 and self.cy > 0:
 					goal_rad = np.arctan2(self.cy - robot_y, self.cx - robot_x)
-					self.goal_angle = contain_pi(goal_rad + (np.pi / 2)) #contain angle between pi and -pi
+					self.goal_angle = -(contain_pi(goal_rad + (np.pi / 2))) #contain angle between pi and -pi
 					# default angle has straight ahead as -1.57, max angle to the left is -0.07, max angle to the right is -2.4
 					# defautt straight ahead is -pi/2 the left is 0 and the right is - pi
 				current_contour.append(self.area)

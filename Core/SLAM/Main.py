@@ -50,6 +50,7 @@ def find_landmark(robot, ID):
 
 	if not (landmark_bearing == 0):
 		landmark_range = robot.measure.distance_to_camera(landmark_marker[1][0]) / 100
+		print('[SLAMBOT][DEBUG] BEARING: %s, %s, %s' % (landmark_range, landmark_bearing,ID))
 		return np.array([[landmark_range, landmark_bearing, ID]]).T
 
 	return np.array([[0.0, 0.0, 0]]).T
@@ -116,8 +117,8 @@ def landmark_init(robot, sensor):
 	if (not(sensor[0] == 0.0 and sensor[1] == 0.0 and sensor[2] == 0)) and (sensor[2] not in robot.landmarks):
 		#expanded the state vector
 		robot.landmarks.append(sensor[2]) #add the landmark to known landmark matrix
-		robot.u[int(3 + (sensor[2] * 2))] = robot.x[0] + sensor[0] * np.cos(robot.x[2] + sensor[1])
-		robot.u[int(4 + (sensor[2] * 2))] = robot.x[1] + sensor[0] * np.sin(robot.x[2] + sensor[1])
+		robot.u[int(3 + (sensor[2] * 2))] = robot.u[0] + (sensor[0] * np.cos(robot.x[2] + sensor[1]))
+		robot.u[int(4 + (sensor[2] * 2))] = robot.u[1] + (sensor[0] * np.sin(robot.x[2] + sensor[1]))
 		robot.zjac = np.array([[float(np.cos(robot.x[2] + sensor[1])), float(-sensor[0] * (np.sin(robot.x[2] + sensor[1])))],
 							   [float(np.sin(robot.x[2] + sensor[1])), float(sensor[0] * (np.cos(robot.x[2] + sensor[1])))]])
 		landmark_sigma = dot(robot.zjac,robot.Q).dot(robot.zjac.T)
@@ -129,6 +130,7 @@ def run_localization(robot):
 
 	robot.odom.set_initial() #set initial odom
 	#MAKE A MOVE
+	#robot.state = 3
 	if robot.state == 0:
 		path = drive_relative(0.9,0.9, robot)
 		if path: robot.state = 1
@@ -137,7 +139,7 @@ def run_localization(robot):
 	robot.ekf_predict() #run the prediction step
 	#FOR EACH LANDMARK DO THE FOLLOWING
 	if robot.state == 1:
-		Motors.driveMotors(-30,30);
+		Motors.driveMotors(-30,30)
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
@@ -147,6 +149,9 @@ def run_localization(robot):
 
 	if robot.state == 2:
 		Motors.driveMotors(0,0);
+	
+	if robot.state == 3:
+		Motors.driveMotors(30,-30)
 
 	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP!!!!????
 
@@ -163,11 +168,11 @@ if __name__ == "__main__":
 	print('[SLAMBOT] Starting main program')
 	print('[SLAMBOT] Warming up the camera')
 
-	robot = robot(std_vel=40, std_steer=30, dt=0.25) #speed units are in a scaled from 0 to 100
+	robot = robot(std_vel=40, std_steer=30, dt=0.5) #speed units are in a scaled from 0 to 100
 	robot.x = np.zeros((3,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.xjac = np.zeros((3,3))
-	robot.ujac = np.zeros((3,2))s
+	robot.ujac = np.zeros((3,2))
 	robot.sigma = np.identity(3)
 	robot.client.connect() #Start the python socket
 	robot.stream.start() #Start the camera
