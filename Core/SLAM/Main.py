@@ -140,7 +140,7 @@ def run_localization(robot):
 
 	robot.odom.set_initial() #set initial odom
 	#MAKE A MOVE
-	robot.state == 3: #debug state
+	robot.state = 3 #debug state
 	if robot.state == 0:
 		path = drive_relative(0.9,0.9, robot)
 		if path: robot.state = 1
@@ -155,13 +155,13 @@ def run_localization(robot):
 			landmark_init(robot, sensor) #check for any new landmarks
 			#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
 		if len(robot.landmarks) >= 3:
-			robot.state = 2:
+			robot.state = 2
 
 	if robot.state == 2:
 		Motors.driveMotors(0,0);
 
 	if robot.state == 3:
-		Motors.driveMotors(-30,30);
+		Motors.driveMotors(30,-30);
 
 	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP!!!!????
 
