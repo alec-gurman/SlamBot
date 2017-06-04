@@ -148,7 +148,7 @@ def run_localization(robot):
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
-			#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
+			#robot.ekf_update(sensor) #call the ekf_update for each landmark
 		if len(robot.landmarks) >= 5:
 			robot.state = 100
 
@@ -186,7 +186,7 @@ if __name__ == "__main__":
 	print('[SLAMBOT] Starting main program')
 	print('[SLAMBOT] Warming up the camera')
 
-	robot = robot(std_vel=40, std_steer=30, dt=0.5) #speed units are in a scaled from 0 to 100
+	robot = robot(std_vel=40, std_steer=30, dt=0.25) #speed units are in a scaled from 0 to 100
 	robot.x = np.zeros((3,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.xjac = np.zeros((3,3))

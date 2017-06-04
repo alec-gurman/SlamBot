@@ -29,7 +29,7 @@ class robot(object):
 		self.dt = dt
 		self.landmarks = []
 		self.R = np.diag([0.00025, 0.00025])
-		self.Q = np.diag([0.0005, 0.0005])
+		self.Q = np.diag([0.01, 0.01])
 		self.I = np.identity(3) #inital robot_x , robot_y, robot_theta state vector?
 		self.current_path = 0
 		self.debug = False
@@ -54,9 +54,11 @@ class robot(object):
 		#COVARIANCE
 		self.sigma = dot(self.xjac, self.sigma).dot(self.xjac.T) + dot(self.ujac, self.R).dot(self.ujac.T)
 
-	def ekf_update(self, landmark_id, sensor):
+	def ekf_update(self, sensor):
 
 		#UPDATE STEP
+		
+		landmark_id = sensor[2]
 
 		H = self.H_of(landmark_id, sensor)
 
@@ -101,27 +103,27 @@ class robot(object):
 
 
 	def H_of(self, landmark_id, sensor):
-		px = self.u[(3 + (landmark_id * 2))]
-		py = self.u[(4 + (landmark_id * 2))]
+		px = self.u[int(3 + (landmark_id * 2))]
+		py = self.u[int(4 + (landmark_id * 2))]
 		hyp = sensor[0]**2
 		dist = sensor[0]
 
 		#Expand with landmarks
-		n = len(robot.landmarks)
-		robot_H = np.array([[-(px - x[0, 0]) / dist, -(py - x[1, 0]) / dist, 0],
-					  [(py - x[1, 0]) / hyp,  -(px - x[0, 0]) / hyp, -1]])
-		landmark_H = np.array([[-(px - x[0, 0]) / dist, -(py - x[1, 0]) / dist],
-					  [(py - x[1, 0]) / hyp,  -(px - x[0, 0]) / hyp]])
-		zeros_H_before = np.zeros((2,(2 * landmark_id)))
-		zeros_H_after = np.zeros((2,((2 * (n - 1)) - landmark_id)))
+		n = len(self.landmarks)
+		robot_H = np.array([[-(px - self.u[0]) / dist, -(py - self.u[1]) / dist, 0],
+					  [(py - self.u[1]) / hyp,  -(px - self.u[0]) / hyp, -1]])
+		landmark_H = np.array([[-(px - self.u[0]) / dist, -(py - self.u[1]) / dist],
+					  [(py - self.u[1]) / hyp,  -(px - self.u[0]) / hyp]])
+		zeros_H_before = np.zeros((2,int(2 * landmark_id)))
+		zeros_H_after = np.zeros((2,int((2 * (n - 1)) - landmark_id)))
 		H = np.concatenate((robot_H,zeros_H_before,landmark_H,zeros_H_after), axis=1)
 
 		return H
 
 	def Hx(self, landmark_id):
 
-		px = self.u[(3 + (landmark_id * 2))]
-		py = self.u[(4 + (landmark_id * 2))]
+		px = self.u[int(3 + (landmark_id * 2))]
+		py = self.u[int(4 + (landmark_id * 2))]
 		robot_x = self.u[0]
 		robot_y = self.u[1]
 		robot_theta = self.u[2]
