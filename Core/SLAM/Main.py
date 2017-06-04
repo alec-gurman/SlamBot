@@ -152,7 +152,7 @@ def run_localization(robot):
 		if len(robot.landmarks) >= 5:
 			robot.state = 100
 
-		Motors.driveMotors(0,40)
+		Motors.driveMotors(40,0)
 		time.sleep(robot.dt)
 		Motors.driveMotors(0,0)
 		

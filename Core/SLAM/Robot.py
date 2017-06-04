@@ -28,7 +28,7 @@ class robot(object):
 		self.client = SocketClient()
 		self.dt = dt
 		self.landmarks = []
-		self.R = np.diag([0.0005, 0.0005])
+		self.R = np.diag([0.00025, 0.00025])
 		self.Q = np.diag([0.0005, 0.0005])
 		self.I = np.identity(3) #inital robot_x , robot_y, robot_theta state vector?
 		self.current_path = 0
@@ -74,24 +74,16 @@ class robot(object):
 
 	def send(self):
 		try:
-			msg = np.array([[self.u],[self.sigma]])
+			msg = np.empty(2,dtype=object)
+			msg[:] = [self.u, self.sigma]
 			self.client.send(msg)
+			#another method is number vtsack
 		except Exception as e:
 			print(e)
 			print("[SLAMBOT] Trying to reconnect.......")
-			try:
-				print("[SLAMBOT] Reconnecte!")
-				self.client.connect()
-			except Exception as e:
-				print(e)
-				print("[SLAMBOT] Disconnected! ERROR")
-				self.stream.stop()
-				self.client.sock.close()
-				sys.exit()
-				
+
 
 	def H_of(self, landmark_id, sensor):
-
 		px = self.u[(3 + (landmark_id * 2))]
 		py = self.u[(4 + (landmark_id * 2))]
 		hyp = sensor[0]**2
