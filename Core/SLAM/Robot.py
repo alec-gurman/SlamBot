@@ -75,8 +75,17 @@ class robot(object):
 	def send(self):
 		try:
 			msg = np.empty(2,dtype=object)
-			msg[:] = [self.u, self.sigma]
-			self.client.send(self.u)
+			robot_sigma = self.sigma[0:2,0:2]
+			# L0_sigma = self.sigma[4:6,4:6]
+			# L1_sigma = self.sigma[8:10,8:10]
+			# L2_sigma = self.sigma[4:6,4:6]
+			# L3_sigma = self.sigma[4:6,4:6]
+			# L4_sigma = self.sigma[4:6,4:6]
+			reduced_sigma = robot_sigma
+			msg[:] = [self.u, reduced_sigma]
+			#we are sending this massive covariance array but in reality
+			#we only really need parts of it
+			self.client.send(msg)
 			print(msg)
 			#another method is number vtsack
 		except Exception as e:
