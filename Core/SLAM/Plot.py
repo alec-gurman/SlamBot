@@ -28,7 +28,7 @@ if __name__ == '__main__':
     while True:
         try:
             data = server.recieve()
-            if data is not None:   
+            if data is not None:
                 if len(data) > 0:
                     u = data[0]
                     sigma = data[1]
@@ -56,7 +56,7 @@ if __name__ == '__main__':
                     print(u)
                     print(sigma)
                     plt.axis([-1.0, 2.0, -1.0, 2.0])
-                    plt.pause(0.1)
+                    plt.pause(0.01)
         except Exception as e:
             print(e)
             print("[SLAMBOT] Trying to reconnect............")

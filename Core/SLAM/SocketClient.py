@@ -14,6 +14,7 @@ and wont install correctly on the raspberry pi
 import socket
 import sys
 import time
+import struct
 import numpy as np
 import pickle
 
@@ -29,7 +30,8 @@ class SocketClient(object):
 
 	def send(self, message):
 		msg = pickle.dumps(message, protocol=2)
-		self.sock.sendall(msg)
+		send = struct.pack('>I', len(msg)) + msg
+		self.sock.sendall(send)
 
 
 if __name__ == '__main__':

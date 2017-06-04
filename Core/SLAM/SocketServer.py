@@ -13,6 +13,7 @@ and wont install correctly on the raspberry pi
 
 import socket
 import sys
+import struct
 import numpy as np
 from io import BytesIO, StringIO
 import pickle
@@ -33,6 +34,22 @@ class SocketServer(object):
         self.connection, self.client_address = self.sock.accept()
 
     def recieve(self):
+        raw_msglen = self.recvall(4)
+        if not raw_msglen:
+            return None
+        msglen = struct.unpack('>I', raw_msglen)[0]
+        return self.recvall(msglen)
+
+    def recvall(self, n):
+        data = ''
+        while len(data) < n:
+            packet = self.connection.recv(n - len(data))
+            if not packet:
+                return None
+            data += packet
+        return data
+
+    def recieve_msg(self):
 
         #try:
         data = self.connection.recv(2048)
