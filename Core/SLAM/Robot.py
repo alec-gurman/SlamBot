@@ -80,7 +80,6 @@ class robot(object):
 			#another method is number vtsack
 		except Exception as e:
 			print(e)
-			print("[SLAMBOT] Trying to reconnect.......")
 
 
 	def H_of(self, landmark_id, sensor):
