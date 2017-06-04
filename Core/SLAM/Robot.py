@@ -115,7 +115,7 @@ class robot(object):
 		landmark_H = np.array([[-(px - float(self.u[0])) / dist, -(py - float(self.u[1])) / dist],
 					  [(py - float(self.u[1])) / hyp,  -(px - float(self.u[0])) / hyp]])
 		zeros_H_before = np.zeros((2,int(2 * landmark_id)))
-		zeros_H_after = np.zeros((2,int((2 * (n - 1)) - landmark_id)))
+		zeros_H_after = np.zeros((2,int(2 * ((n - 1) - landmark_id))))
 		H = np.concatenate((robot_H,zeros_H_before,landmark_H,zeros_H_after), axis=1)
 
 		return H
