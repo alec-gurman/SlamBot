@@ -50,7 +50,7 @@ def find_landmark(robot, ID):
 
 	if not (landmark_bearing == 0):
 		landmark_range = robot.measure.distance_to_camera(landmark_marker[1][0]) / 100
-		print('[SLAMBOT][DEBUG] BEARING: %s, %s, %s' % (landmark_range, landmark_bearing,ID))
+		print('[SLAMBOT][DEBUG] LANDMARK %s: %s, %s' % (ID, landmark_range, landmark_bearing))
 		return np.array([[landmark_range, landmark_bearing, ID]]).T
 
 	return np.array([[0.0, 0.0, 0]]).T
@@ -152,7 +152,7 @@ def run_localization(robot):
 		if len(robot.landmarks) >= 5:
 			robot.state = 100
 
-		Motors.driveMotors(40,0)
+		Motors.driveMotors(0,40)
 		time.sleep(robot.dt)
 		Motors.driveMotors(0,0)
 
