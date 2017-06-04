@@ -154,9 +154,11 @@ def run_localization(robot):
 		Motors.driveMotors(0,0);
 
 	if robot.state == 3:
-		Motors.driveMotors(30,-30)
-		if robot.theta > 1.57
-
+		Motors.driveMotors(-30,30)
+		if robot.u[2] > 1.57:
+			Motors.driveMotors(0,0)
+			shutdown(robot)
+			
 	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP!!!!????
 
 def shutdown(robot):

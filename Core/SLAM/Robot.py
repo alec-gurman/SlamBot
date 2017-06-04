@@ -23,7 +23,7 @@ class robot(object):
 		self.max_angular = std_vel - std_steer
 		self.wheelbase = 0.1225
 		self.odom = odom(self.wheelbase)
-		self.PID = PID(50,0.0,0.0) #P, I, D
+		self.PID = PID(45,0.0,0.0) #P, I, D
 		self.client = SocketClient()
 		self.dt = dt
 		self.landmarks = []
