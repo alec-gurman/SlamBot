@@ -30,7 +30,6 @@ class SocketClient(object):
 
 	def send(self, message):
 		msg = pickle.dumps(message, protocol=2)
-		send = struct.pack('>I', len(msg)) + msg
 		self.sock.sendall(send)
 
 

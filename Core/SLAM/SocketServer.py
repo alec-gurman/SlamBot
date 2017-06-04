@@ -33,17 +33,12 @@ class SocketServer(object):
         #find connections
         self.connection, self.client_address = self.sock.accept()
 
-    def recieve(self):
-        raw_msglen = self.recvall(4)
-        if not raw_msglen:
-            return None
-        msglen = struct.unpack('>I', raw_msglen)[0]
-        return self.recvall(msglen)
 
-    def recvall(self, n):
-        data = ''
+    def recieve(self, n):
+        data = np.empty(2,dtype=object)
         while len(data) < n:
             packet = self.connection.recv(n - len(data))
+            print packet
             if not packet:
                 return None
             data += packet
