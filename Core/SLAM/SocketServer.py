@@ -24,7 +24,7 @@ class SocketServer(object):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server = ('192.168.43.30', 10000)
         self.address = server
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.setsockopt(socket. IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.sock.bind(server)
         self.sock.listen(1)
 
@@ -34,15 +34,15 @@ class SocketServer(object):
 
     def recieve(self):
 
-        try:
-            data = self.connection.recv(1024)
-            data = pickle.loads(data)
-            #print(repr(data))
-            return data
-        except Exception as e:
-            print(str(e))
-            print('[SLAMBOT][ERROR] Could not connect')
-            self.connection.close()
+        #try:
+        data = self.connection.recv(2048)
+        data = pickle.loads(data)
+        #print(repr(data))
+        return data
+        #except Exception as e:
+        #print(str(e))
+        #print('[SLAMBOT][ERROR] Could not connect')
+        #self.connection.close()
 
 if __name__ == '__main__':
 

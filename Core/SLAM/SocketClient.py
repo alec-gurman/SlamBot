@@ -23,19 +23,15 @@ class SocketClient(object):
 
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.address = ('192.168.43.30', 10000)
-		
+
 	def connect(self):
 		self.sock.connect(self.address)
 
 	def send(self, message):
-		try:
-			msg = pickle.dumps(message, protocol=2)
-			self.sock.sendall(msg)
-		except Exception as e:
-			print(e)
-			print('[SLAMBOT][ERROR] Could not connect to: %s\n' % self.address[0])
-			
-		
+		msg = pickle.dumps(message, protocol=2)
+		self.sock.sendall(msg)
+
+
 if __name__ == '__main__':
 
 	client = SocketClient()
@@ -49,4 +45,3 @@ if __name__ == '__main__':
 		except KeyboardInterrupt:
 			client.sock.close()
 			sys.exit()
-
