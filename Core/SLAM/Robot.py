@@ -21,7 +21,7 @@ class robot(object):
 		self.std_vel = std_vel
 		self.std_steer = std_steer
 		self.max_angular = std_vel - std_steer
-		self.wheelbase = 0.1225
+		self.wheelbase = 0.1
 		self.odom = odom(self.wheelbase)
 		self.PID = PID(45,0.0,0.0) #P, I, D
 		self.client = SocketClient()
@@ -34,6 +34,7 @@ class robot(object):
 		self.debug = False
 		self.update = 0
 		self.state = 0
+		self.stored_theta = 0
 		self.stream = PiVideoStream() #start the video stream on a seperate thread
 		self.measure = pixelCalibrate(1200,90) #calibrate the camera for distances
 

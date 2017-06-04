@@ -136,13 +136,13 @@ def run_localization(robot):
 		path = drive_relative(0.9,0.9, robot)
 		if path:
 			robot.state = 1
-			current_theta = robot.u[2]
+			robot.stored_theta = float(robot.u[2])
 
 	update_motion_model()
 	robot.ekf_predict() #run the prediction step
 
 	if robot.state == 1:
-		if not((robot.u[2] - current_theta) > 1.57) and current_theta > 0:
+		if not((robot.u[2] - robot.stored_theta) > 1.57):
 			Motors.driveMotors(-30,30)
 		else:
 			robot.state = 2
@@ -154,10 +154,13 @@ def run_localization(robot):
 			robot.state = 3
 
 	if robot.state == 2:
-			if not((current_theta + abs(robot.u[2])) > 1.57) and current_theta < 0:
+			if robot.u[2] > 0:
 				Motors.driveMotors(30,-30)
 			else:
-				robot.state = 1
+				if not((robot.stored_theta + abs(robot.u[2])) > 1.57):
+					Motors.driveMotors(30,-30)
+				else:
+					robot.state = 1
 			for i in range(5):
 				sensor = find_landmark(robot, i)
 				landmark_init(robot, sensor) #check for any new landmarks
@@ -189,7 +192,7 @@ if __name__ == "__main__":
 	print('[SLAMBOT] Starting main program')
 	print('[SLAMBOT] Warming up the camera')
 
-	robot = robot(std_vel=40, std_steer=30, dt=0.5) #speed units are in a scaled from 0 to 100
+	robot = robot(std_vel=40, std_steer=30, dt=0.25) #speed units are in a scaled from 0 to 100
 	robot.x = np.zeros((3,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.xjac = np.zeros((3,3))
