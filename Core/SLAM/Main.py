@@ -129,36 +129,51 @@ def landmark_init(robot, sensor):
 def run_localization(robot):
 
 	robot.odom.set_initial() #set initial odom
-	#MAKE A MOVE
-	#robot.state = 3
-	if robot.state == 0:
-		path = drive_relative(0.9,0.9, robot)
-		if path: robot.state = 1
 
-	#IMPLEMENT A NEW DRIVE PATH THAT GOES TO CENTER THEN PANS LEFT AND RIGHT INSTEAD OF FULL ROTATION
-	#TO FIND THE LANDMARKS
+	#robot.state = 20
+	if robot.state == 0:
+		#DRIVE TO CENTER OF MAP
+		path = drive_relative(0.9,0.9, robot)
+		if path:
+			robot.state = 1
+			current_theta = robot.u[2]
 
 	update_motion_model()
 	robot.ekf_predict() #run the prediction step
-	#FOR EACH LANDMARK DO THE FOLLOWING
+
 	if robot.state == 1:
-		Motors.driveMotors(-30,30)
+		if not((robot.u[2] - current_theta) > 1.57) and current_theta > 0:
+			Motors.driveMotors(-30,30)
+		else:
+			robot.state = 2
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
 			#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
 		if len(robot.landmarks) >= 3:
-			robot.state = 2
+			robot.state = 3
 
 	if robot.state == 2:
-		Motors.driveMotors(0,0);
+			if not((current_theta + abs(robot.u[2])) > 1.57) and current_theta < 0:
+				Motors.driveMotors(30,-30)
+			else:
+				robot.state = 1
+			for i in range(5):
+				sensor = find_landmark(robot, i)
+				landmark_init(robot, sensor) #check for any new landmarks
+				#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
+			if len(robot.landmarks) >= 3:
+				robot.state = 3
 
 	if robot.state == 3:
+		Motors.driveMotors(0,0);
+
+	if robot.state == 20:
 		Motors.driveMotors(-30,30)
 		if robot.u[2] > 1.57:
 			Motors.driveMotors(0,0)
 			shutdown(robot)
-			
+
 	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP!!!!????
 
 def shutdown(robot):
