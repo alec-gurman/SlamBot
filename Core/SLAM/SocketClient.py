@@ -30,7 +30,7 @@ class SocketClient(object):
 
 	def send(self, message):
 		msg = pickle.dumps(message, protocol=2)
-		self.sock.sendall(send)
+		self.sock.sendall(msg)
 
 
 if __name__ == '__main__':
