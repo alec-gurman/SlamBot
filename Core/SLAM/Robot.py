@@ -57,7 +57,7 @@ class robot(object):
 	def ekf_update(self, sensor):
 
 		#UPDATE STEP
-		
+
 		landmark_id = sensor[2]
 
 		H = self.H_of(landmark_id, sensor)
@@ -114,8 +114,12 @@ class robot(object):
 					  [(py - self.u[1]) / hyp,  -(px - self.u[0]) / hyp, -1]])
 		landmark_H = np.array([[-(px - self.u[0]) / dist, -(py - self.u[1]) / dist],
 					  [(py - self.u[1]) / hyp,  -(px - self.u[0]) / hyp]])
-		zeros_H_before = np.zeros((2,int(2 * landmark_id)))
-		zeros_H_after = np.zeros((2,int((2 * (n - 1)) - landmark_id)))
+		if n > 0:
+			zeros_H_before = np.zeros((2,int(2 * landmark_id)))
+			zeros_H_after = np.zeros((2,int((2 * (n - 1)) - landmark_id)))
+		else:
+			zeros_H_before = np.zeros((2,0))
+			zeros_H_after = np.zeros((2,0))
 		H = np.concatenate((robot_H,zeros_H_before,landmark_H,zeros_H_after), axis=1)
 
 		return H
