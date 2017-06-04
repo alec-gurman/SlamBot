@@ -14,6 +14,7 @@ from Measure import pixelCalibrate
 from numpy import dot
 import numpy as np
 import math
+import time
 
 class robot(object):
 
@@ -21,14 +22,14 @@ class robot(object):
 		self.std_vel = std_vel
 		self.std_steer = std_steer
 		self.max_angular = std_vel - std_steer
-		self.wheelbase = 0.1
+		self.wheelbase = 0.135
 		self.odom = odom(self.wheelbase)
 		self.PID = PID(45,0.0,0.0) #P, I, D
 		self.client = SocketClient()
 		self.dt = dt
 		self.landmarks = []
-		self.R = np.diag([0.1, 0.1])
-		self.Q = np.diag([0.1, 0.1])
+		self.R = np.diag([0.0005, 0.0005])
+		self.Q = np.diag([0.0005, 0.0005])
 		self.I = np.identity(3) #inital robot_x , robot_y, robot_theta state vector?
 		self.current_path = 0
 		self.debug = False
@@ -72,9 +73,22 @@ class robot(object):
 
 
 	def send(self):
-
-		self.client.send(self.u) #send the state vector array
-		#self.client.send(self.sigma) #send the covariance array
+		try:
+			msg = np.array([[self.u],[self.sigma]])
+			self.client.send(msg)
+		except Exception as e:
+			print(e)
+			print("[SLAMBOT] Trying to reconnect.......")
+			try:
+				print("[SLAMBOT] Reconnecte!")
+				self.client.connect()
+			except Exception as e:
+				print(e)
+				print("[SLAMBOT] Disconnected! ERROR")
+				self.stream.stop()
+				self.client.sock.close()
+				sys.exit()
+				
 
 	def H_of(self, landmark_id, sensor):
 

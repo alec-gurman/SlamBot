@@ -76,7 +76,6 @@ def update_motion_jacobians(current_pose, delta_d):
 
 def update_motion_model():
 
-	time.sleep(robot.dt)
 	robot.send() #send the robot data before the update
 
 	current_pose, delta_d = robot.odom.update(robot.x[2]) #update the odometry data
@@ -133,28 +132,38 @@ def run_localization(robot):
 	#robot.state = 20
 	if robot.state == 0:
 		#DRIVE TO CENTER OF MAP
-		#path = drive_relative(0.9,0.9, robot)
-		#if path:
-		#	robot.state = 1
+		path = drive_relative(0.5,0.5, robot)
+		if path:
+			robot.state = 1
+			Motors.driveMotors(0,0)
 		#	robot.stored_theta = float(robot.u[2])
+		
+		time.sleep(robot.dt)
+		update_motion_model()
+		robot.ekf_predict() #run the prediction step
 
+
+	if robot.state == 1:
+		
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
 			#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
-		if len(robot.landmarks) >= 3:
+		if len(robot.landmarks) >= 5:
 			robot.state = 100
 
-		Motors.driveMotors(-30,30)
-		time.sleep(1.0)
-
-
-	update_motion_model()
-	robot.ekf_predict() #run the prediction step
+		Motors.driveMotors(0,40)
+		time.sleep(robot.dt)
+		Motors.driveMotors(0,0)
+		
+		update_motion_model()
+		robot.ekf_predict() #run the prediction step
 
 
 	if robot.state == 100:
 		Motors.driveMotors(0,0);
+		time.sleep(robot.dt)
+		robot.send()
 
 	if robot.state == 20:
 		Motors.driveMotors(-30,30)
@@ -177,12 +186,12 @@ if __name__ == "__main__":
 	print('[SLAMBOT] Starting main program')
 	print('[SLAMBOT] Warming up the camera')
 
-	robot = robot(std_vel=40, std_steer=30, dt=0.25) #speed units are in a scaled from 0 to 100
+	robot = robot(std_vel=40, std_steer=30, dt=0.5) #speed units are in a scaled from 0 to 100
 	robot.x = np.zeros((3,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.u = np.zeros((13,1)) #robot_x, robot_y, robot_theta ROBOT INITALS
 	robot.xjac = np.zeros((3,3))
 	robot.ujac = np.zeros((3,2))
-	robot.sigma = np.identity(3)
+	robot.sigma = np.diag((0.0005,0.0005,0.0005))
 	robot.client.connect() #Start the python socket
 	robot.stream.start() #Start the camera
 	time.sleep(2.0) #allow camera to warm up
