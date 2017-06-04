@@ -9,15 +9,17 @@ via the slambot
 
 import math
 import matplotlib.pyplot as plt
+import time
+import sys
 from Draw import Draw
 from SocketServer import SocketServer
+from filterpy.stats import plot_covariance_ellipse
 
 if __name__ == '__main__':
 
     print('[SLAMBOT] Starting Plotting Script and listening for a robot pose')
 
     plt.figure()
-    plt.axis([0, 2.0, 0, 2.0])
     Draw = Draw()
     Draw.draw_base_map()
     server = SocketServer()
@@ -27,18 +29,44 @@ if __name__ == '__main__':
         try:
             data = server.recieve()
             if len(data) > 0:
-                if(len(data) == 13):
-                    #Recived our state vector, Plot
-                    axis_marker = Draw.draw_axis_marker(math.degrees(data[2]))
-                    plt.scatter(data[0],data[1],marker=(3, 0, math.degrees(data[2])+26), color='b', s=200)
-                    plt.scatter(data[0],data[1],marker=axis_marker, color='r',s=300)
-                    for i in range(5):
-                        if (data[(3 + (i * 2))] > 0) and (data[(4 + (i * 2))] > 0):
-                            plt.scatter(data[3 + (i * 2)],data[4 + (i * 2)],marker=(8,2,0),color='k',s=250)
-                else:
-                    #recieved our covariance matrix, Plot covariances
-                    print('[SLAMBOT][DEBUG] Got Covariance Matrix')
-                plt.pause(0.25)
-        except KeyboardInterrupt:
-            server.sock.close()
-            sys.exit()
+                u_sub = data[0]
+                u = u_sub[0]
+                sigma_sub = data[1]
+                sigma = sigma_sub[0]
+                #if(len(data) == 13):
+                #Recived our state vector, Plot
+                axis_marker = Draw.draw_axis_marker(math.degrees(u[2]))
+                plt.scatter(u[0],u[1],marker=(3, 0, math.degrees(u[2])+26), color='b', s=200)
+                plt.scatter(u[0],u[1],marker=axis_marker, color='r',s=300)
+                for i in range(5):
+                    if not((u[(3 + (i * 2))] == 0.0) and (u[(4 + (i * 2))] == 0.0)):
+                        #Plot Landmark Position
+                        plt.scatter(u[3 + (i * 2)],u[4 + (i * 2)],marker=(8,2,0),color='k',s=250)
+                        #Plot Landmark Covariance (if exists)
+                        sigma_location = 4 + (i * 2)
+                        # plot_covariance_ellipse(
+                        #     (u[3 + (i * 2)], u[4 + (i * 2)]),
+                        #     sigma[sigma_location:(sigma_location + 2), sigma_location:(sigma_location + 2)],
+                        #     std=6, facecolor='none', ec='#004080', alpha=0.3)
+
+                #Plot the robot covariance
+                plot_covariance_ellipse(
+                    (u[0], u[1]), sigma[0:2, 0:2],
+                    std=6, facecolor='none', ec='#004080', alpha=0.3)
+
+                print(u)
+                print(sigma)
+                plt.axis([-1.0, 2.0, -1.0, 2.0])
+                plt.pause(0.1)
+        except Exception as e:
+            print(e)
+            print("[SLAMBOT] Trying to reconnect............")
+            try:
+                print("[SLAMBOT] Reconnected!")
+                plt.clf()
+                server.connect()
+            except Exception as e:
+                print(e)
+                print("[SLAMBOT] Disconnected! ERROR")
+                server.sock.close()
+                sys.exit()

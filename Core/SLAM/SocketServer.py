@@ -37,13 +37,12 @@ class SocketServer(object):
         try:
             data = self.connection.recv(1024)
             data = pickle.loads(data)
-            print(repr(data))
+            #print(repr(data))
             return data
         except Exception as e:
             print(str(e))
             print('[SLAMBOT][ERROR] Could not connect')
             self.connection.close()
-            sys.exit()
 
 if __name__ == '__main__':
 
