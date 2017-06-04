@@ -34,7 +34,7 @@ class SocketClient(object):
 		except Exception as e:
 			print(e)
 			print('[SLAMBOT][ERROR] Could not connect to: %s\n' % self.address[0])
-			sys.exit()
+			
 		
 if __name__ == '__main__':
 
