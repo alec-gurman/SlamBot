@@ -133,42 +133,27 @@ def run_localization(robot):
 	#robot.state = 20
 	if robot.state == 0:
 		#DRIVE TO CENTER OF MAP
-		path = drive_relative(0.9,0.9, robot)
-		if path:
-			robot.state = 1
-			robot.stored_theta = float(robot.u[2])
+		#path = drive_relative(0.9,0.9, robot)
+		#if path:
+		#	robot.state = 1
+		#	robot.stored_theta = float(robot.u[2])
 
-	update_motion_model()
-	robot.ekf_predict() #run the prediction step
-
-	if robot.state == 1:
-		if not((robot.u[2] - robot.stored_theta) > 1.57):
-			Motors.driveMotors(-30,30)
-		else:
-			robot.state = 2
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
 			#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
 		if len(robot.landmarks) >= 3:
-			robot.state = 3
+			robot.state = 100
 
-	if robot.state == 2:
-			if robot.u[2] > 0:
-				Motors.driveMotors(30,-30)
-			else:
-				if not((robot.stored_theta + abs(robot.u[2])) > 1.57):
-					Motors.driveMotors(30,-30)
-				else:
-					robot.state = 1
-			for i in range(5):
-				sensor = find_landmark(robot, i)
-				landmark_init(robot, sensor) #check for any new landmarks
-				#robot.ekf_update(landmark_id, sensor) #call the ekf_update for each landmark
-			if len(robot.landmarks) >= 3:
-				robot.state = 3
+		Motors.driveMotors(-30,30)
+		time.sleep(1.0)
 
-	if robot.state == 3:
+
+	update_motion_model()
+	robot.ekf_predict() #run the prediction step
+
+
+	if robot.state == 100:
 		Motors.driveMotors(0,0);
 
 	if robot.state == 20:

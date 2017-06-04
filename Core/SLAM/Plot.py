@@ -38,7 +38,7 @@ if __name__ == '__main__':
                 else:
                     #recieved our covariance matrix, Plot covariances
                     print('[SLAMBOT][DEBUG] Got Covariance Matrix')
-                plt.pause(0.5)
+                plt.pause(0.25)
         except KeyboardInterrupt:
             server.sock.close()
             sys.exit()
