@@ -29,8 +29,9 @@ if __name__ == '__main__':
         data = server.recieve(4096)
         if data is not None:
             if len(data) > 0:
-                u = data[0]
-                sigma = data[1]
+                u = data
+                print(data)
+                #sigma = data[1]
                 #if(len(data) == 13):
                 #Recived our state vector, Plot
                 axis_marker = Draw.draw_axis_marker(math.degrees(float(u[2])))
@@ -48,11 +49,11 @@ if __name__ == '__main__':
                         #     std=6, facecolor='none', ec='#004080', alpha=0.3)
 
                 #Plot the robot covariance
-                plot_covariance_ellipse(
-                    (float(u[0]), float(u[1])), (sigma[0:2, 0:2]),
-                    std=6, facecolor='none', ec='#004080', alpha=0.3)
+                #plot_covariance_ellipse(
+                #    (float(u[0]), float(u[1])), (sigma[0:2, 0:2]),
+                #    std=6, facecolor='none', ec='#004080', alpha=0.3)
 
                 print(u)
-                print(sigma)
+                #print(sigma)
                 plt.axis([-1.0, 2.0, -1.0, 2.0])
                 plt.pause(0.01)

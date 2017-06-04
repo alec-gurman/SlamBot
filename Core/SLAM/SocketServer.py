@@ -33,28 +33,11 @@ class SocketServer(object):
         #find connections
         self.connection, self.client_address = self.sock.accept()
 
-
     def recieve(self, n):
-        data = np.empty(2,dtype=object)
-        while len(data) < n:
-            packet = self.connection.recv(n - len(data))
-            print packet
-            if not packet:
-                return None
-            data += packet
-        return data
+        packet = self.connection.recv(n)
+        packet = pickle.loads(packet)
 
-    def recieve_msg(self):
-
-        #try:
-        data = self.connection.recv(2048)
-        data = pickle.loads(data)
-        #print(repr(data))
-        return data
-        #except Exception as e:
-        #print(str(e))
-        #print('[SLAMBOT][ERROR] Could not connect')
-        #self.connection.close()
+        return packet
 
 if __name__ == '__main__':
 
