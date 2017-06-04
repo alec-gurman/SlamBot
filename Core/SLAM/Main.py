@@ -135,6 +135,9 @@ def run_localization(robot):
 		path = drive_relative(0.9,0.9, robot)
 		if path: robot.state = 1
 
+	#IMPLEMENT A NEW DRIVE PATH THAT GOES TO CENTER THEN PANS LEFT AND RIGHT INSTEAD OF FULL ROTATION
+	#TO FIND THE LANDMARKS
+
 	update_motion_model()
 	robot.ekf_predict() #run the prediction step
 	#FOR EACH LANDMARK DO THE FOLLOWING
@@ -149,9 +152,10 @@ def run_localization(robot):
 
 	if robot.state == 2:
 		Motors.driveMotors(0,0);
-	
+
 	if robot.state == 3:
 		Motors.driveMotors(30,-30)
+		if robot.theta > 1.57
 
 	#ANOTHER METHOD, SCAN ONE LANDMARK PER LOOP!!!!????
 
