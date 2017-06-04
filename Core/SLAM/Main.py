@@ -53,7 +53,7 @@ def find_landmark(robot, ID):
 		print('[SLAMBOT][DEBUG] LANDMARK %s: %s, %s' % (ID, landmark_range, landmark_bearing))
 		return np.array([[landmark_range, landmark_bearing, ID]]).T
 
-	return np.array([[0.0, 0.0, 0]]).T
+	return np.array([[0.0, 0.0, 100]]).T
 
 def update_motion_jacobians(current_pose, delta_d):
 
@@ -150,7 +150,8 @@ def run_localization(robot):
 			landmark_init(robot, sensor) #check for any new landmarks
 			#if len(robot.landmarks) > 0:
 				#robot.ekf_update(sensor) #call the ekf_update for each landmark
-			if sensor[2] == 0:
+			if sensor[2] == 4:
+				print('im here')
 				robot.state = 2
 		if len(robot.landmarks) >= 5:
 			robot.state = 100
@@ -169,7 +170,8 @@ def run_localization(robot):
 			landmark_init(robot, sensor) #check for any new landmarks
 			#if len(robot.landmarks) > 0:
 				#robot.ekf_update(sensor) #call the ekf_update for each landmark
-			if sensor[2] == 4:
+			if sensor[2] == 0:
+				print('now here')
 				robot.state = 1
 
 		if len(robot.landmarks) >= 5:
