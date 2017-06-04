@@ -103,34 +103,30 @@ class robot(object):
 
 
 	def H_of(self, landmark_id, sensor):
-		px = self.u[int(3 + (landmark_id * 2))]
-		py = self.u[int(4 + (landmark_id * 2))]
-		hyp = sensor[0]**2
-		dist = sensor[0]
+		px = float(self.u[int(3 + (landmark_id * 2))])
+		py = float(self.u[int(4 + (landmark_id * 2))])
+		hyp = float(sensor[0]**2)
+		dist = float(sensor[0])
 
 		#Expand with landmarks
 		n = len(self.landmarks)
-		robot_H = np.array([[-(px - self.u[0]) / dist, -(py - self.u[1]) / dist, 0],
-					  [(py - self.u[1]) / hyp,  -(px - self.u[0]) / hyp, -1]])
-		landmark_H = np.array([[-(px - self.u[0]) / dist, -(py - self.u[1]) / dist],
-					  [(py - self.u[1]) / hyp,  -(px - self.u[0]) / hyp]])
-		if n > 0:
-			zeros_H_before = np.zeros((2,int(2 * landmark_id)))
-			zeros_H_after = np.zeros((2,int((2 * (n - 1)) - landmark_id)))
-		else:
-			zeros_H_before = np.zeros((2,0))
-			zeros_H_after = np.zeros((2,0))
+		robot_H = np.array([[-(px - float(self.u[0])) / dist, -(py - float(self.u[1])) / dist, 0],
+					  [(py - float(self.u[1])) / hyp,  -(px - float(self.u[0])) / hyp, -1]])
+		landmark_H = np.array([[-(px - float(self.u[0])) / dist, -(py - float(self.u[1])) / dist],
+					  [(py - float(self.u[1])) / hyp,  -(px - float(self.u[0])) / hyp]])
+		zeros_H_before = np.zeros((2,int(2 * landmark_id)))
+		zeros_H_after = np.zeros((2,int((2 * (n - 1)) - landmark_id)))
 		H = np.concatenate((robot_H,zeros_H_before,landmark_H,zeros_H_after), axis=1)
 
 		return H
 
 	def Hx(self, landmark_id):
 
-		px = self.u[int(3 + (landmark_id * 2))]
-		py = self.u[int(4 + (landmark_id * 2))]
-		robot_x = self.u[0]
-		robot_y = self.u[1]
-		robot_theta = self.u[2]
+		px = float(self.u[int(3 + (landmark_id * 2))])
+		py = float(self.u[int(4 + (landmark_id * 2))])
+		robot_x = float(self.u[0])
+		robot_y = float(self.u[1])
+		robot_theta = float(self.u[2])
 		Hx = np.array([[(np.sqrt((robot_x - px)**2 + (robot_y - py)**2))],
 					[(math.atan2(py - robot_y, px - robot_x)) - robot_theta]])
 

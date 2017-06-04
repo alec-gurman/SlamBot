@@ -148,7 +148,8 @@ def run_localization(robot):
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
-			robot.ekf_update(sensor) #call the ekf_update for each landmark
+			if len(robot.landmarks) > 0:
+				robot.ekf_update(sensor) #call the ekf_update for each landmark
 		if len(robot.landmarks) >= 5:
 			robot.state = 100
 
@@ -167,7 +168,8 @@ def run_localization(robot):
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
-			robot.ekf_update(sensor) #call the ekf_update for each landmark
+			if len(robot.landmarks) > 0:
+				robot.ekf_update(sensor) #call the ekf_update for each landmark
 		if len(robot.landmarks) >= 5:
 			robot.state = 100
 
