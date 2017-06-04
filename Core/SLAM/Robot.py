@@ -77,6 +77,7 @@ class robot(object):
 			msg = np.empty(2,dtype=object)
 			msg[:] = [self.u, self.sigma]
 			self.client.send(msg)
+			print(msg)
 			#another method is number vtsack
 		except Exception as e:
 			print(e)

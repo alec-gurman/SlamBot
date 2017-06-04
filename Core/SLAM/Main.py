@@ -113,7 +113,7 @@ def drive_relative(x, y, robot):
 
 def landmark_init(robot, sensor):
 
-	if (not(sensor[0] == 0.0 and sensor[1] == 0.0)) and (sensor[2] not in robot.landmarks):
+	if ((not(sensor[0] == 0.0 and sensor[1] == 0.0)) and (sensor[2] not in robot.landmarks)):
 		#expanded the state vector
 		robot.landmarks.append(sensor[2]) #add the landmark to known landmark matrix
 		robot.u[int(3 + (sensor[2] * 2))] = robot.u[0] + (sensor[0] * np.cos(robot.x[2] + sensor[1]))
@@ -137,14 +137,14 @@ def run_localization(robot):
 			robot.state = 1
 			Motors.driveMotors(0,0)
 		#	robot.stored_theta = float(robot.u[2])
-		
+
 		time.sleep(robot.dt)
 		update_motion_model()
 		robot.ekf_predict() #run the prediction step
 
 
 	if robot.state == 1:
-		
+
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
@@ -155,7 +155,7 @@ def run_localization(robot):
 		Motors.driveMotors(40,0)
 		time.sleep(robot.dt)
 		Motors.driveMotors(0,0)
-		
+
 		update_motion_model()
 		robot.ekf_predict() #run the prediction step
 
