@@ -22,7 +22,8 @@ import cv2
 def find_landmark(robot, ID):
 
 	#scan each color pattern in the current frame to try and find a landmark
-	img = robot.stream.read()
+	#img = robot.stream.read()
+	img = '../tools/calibration/opencv_image_0.png'
 
 	detectRed = Vision.get_blob('red', img)
 	red_blobs = []
