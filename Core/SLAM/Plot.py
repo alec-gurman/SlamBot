@@ -47,27 +47,27 @@ if __name__ == '__main__':
                         #     plot_covariance_ellipse(
                         #         (u[s_l], u[(s_l + 1)]),
                         #         sigma[s_l:(s_l + 2), s_l:(s_l + 2)],
-                        #         std=6, facecolor='none', ec='#9b59b6', alpha=0.3)
+                        #         std=6, facecolor='none', ec='#9b59b6', alpha=0.8)
                         # if (i == 1) and (len(sigma) >= 7):
                         #     plot_covariance_ellipse(
                         #         (u[s_l], u[(s_l + 1)]),
                         #         sigma[s_l:(s_l + 2), s_l:(s_l + 2)],
-                        #         std=6, facecolor='none', ec='#e74c3c', alpha=0.3)
+                        #         std=6, facecolor='none', ec='#e74c3c', alpha=0.8)
                         # if (i == 2) and (len(sigma) >= 9):
                         #     plot_covariance_ellipse(
                         #         (u[s_l], u[(s_l + 1)]),
                         #         sigma[s_l:(s_l + 2), s_l:(s_l + 2)],
-                        #         std=6, facecolor='none', ec='#f1c40f', alpha=0.3)
+                        #         std=6, facecolor='none', ec='#f1c40f', alpha=0.8)
                         # if (i == 3) and (len(sigma) >= 11):
                         #     plot_covariance_ellipse(
                         #         (u[s_l], u[(s_l + 1)]),
                         #         sigma[s_l:(s_l + 2), s_l:(s_l + 2)],
-                        #         std=6, facecolor='none', ec='#2c3e50', alpha=0.3)
+                        #         std=6, facecolor='none', ec='#2c3e50', alpha=0.8)
                         # if (i == 4) and (len(sigma) >= 13):
                         #     plot_covariance_ellipse(
                         #         (u[s_l], u[(s_l + 1)]),
                         #         sigma[s_l:(s_l + 2), s_l:(s_l + 2)],
-                        #         std=6, facecolor='none', ec='#2ecc71', alpha=0.3)
+                        #         std=6, facecolor='none', ec='#2ecc71', alpha=0.8)
 
                 #Plot the robot covariance
                 plot_covariance_ellipse(
