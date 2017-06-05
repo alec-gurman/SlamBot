@@ -66,10 +66,13 @@ class robot(object):
 		K = dot(self.sigma, H.T).dot(np.linalg.inv(S))
 
 		hx =  self.Hx(landmark_id)
-		y = self.residual(sensor, hx)
-		self.u = self.u + dot(K, y)
+		sensor_only = sensor[0:2,:]
+		y = self.residual(sensor_only, hx)
+		ky_dot = np.zeros((13,1))
+		ky_dot[0:((2*len(self.landmarks))+3),:] = dot(K, y)
+		self.u = self.u + ky_dot
 
-		self.I = np.identity((3 + len(self.landmarks))) #the identity expands with N amount of landmarks init
+		self.I = np.identity((3 + (2*len(self.landmarks)))) #the identity expands with N amount of landmarks init
 		I_KH = self.I - dot(K, H)
 		self.sigma = dot(I_KH, self.sigma)
 
@@ -114,11 +117,10 @@ class robot(object):
 					  [(py - float(self.u[1])) / hyp,  -(px - float(self.u[0])) / hyp, -1]])
 		landmark_H = np.array([[-(px - float(self.u[0])) / dist, -(py - float(self.u[1])) / dist],
 					  [(py - float(self.u[1])) / hyp,  -(px - float(self.u[0])) / hyp]])
-		zeros_fill = np.zeros((2,int(2 * (n-1)))
+		zeros_fill = np.zeros((2,int(2 * n)))
 		H = np.concatenate((robot_H,zeros_fill), axis=1)
-		s = (2*landmark_id + 3)
-		if s > (3 + n):
-			
+		landmark_index = self.landmarks.index(landmark_id)
+		s = (2*landmark_index + 3)
 		H[0:2, s:(s+2)] = landmark_H
 
 		return H

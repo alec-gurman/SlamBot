@@ -22,8 +22,9 @@ import cv2
 def find_landmark(robot, ID):
 
 	#scan each color pattern in the current frame to try and find a landmark
-	#img = robot.stream.read()
-	img = '../tools/calibration/opencv_image_0.png'
+	img = robot.stream.read()
+	#img_path = '../tools/calibration/opencv_image_0.png'
+	#img = cv2.imread(img_path)
 
 	detectRed = Vision.get_blob('red', img)
 	red_blobs = []
@@ -54,7 +55,7 @@ def find_landmark(robot, ID):
 		print('[SLAMBOT][DEBUG] LANDMARK %s: %s, %s' % (ID, landmark_range, landmark_bearing))
 		return np.array([[landmark_range, landmark_bearing, ID]]).T
 
-	return np.array([[0.0, 0.0, 100]]).T
+	return np.array([[0.0, 0.0, -1]]).T
 
 def update_motion_jacobians(current_pose, delta_d):
 
@@ -148,20 +149,20 @@ def run_localization(robot):
 
 		for i in range(5):
 			sensor = find_landmark(robot, i)
-			landmark_init(robot, sensor) #check for any new landmarks
-			if len(robot.landmarks) > 0:
+			if (len(robot.landmarks) > 0) and sensor[0] > 0:
 				robot.ekf_update(sensor) #call the ekf_update for each landmark
-			if sensor[2] == 0:
-				robot.state = 2
+			landmark_init(robot, sensor) #check for any new landmarks
+			#if sensor[2] == 0:
+			#	robot.state = 2
 
-		Motors.driveMotors(40,0)
-		time.sleep(robot.dt)
-		Motors.driveMotors(0,0)
+		#Motors.driveMotors(40,0)
+		#time.sleep(robot.dt)
+		#Motors.driveMotors(0,0)
 
 		update_motion_model()
 		robot.ekf_predict() #run the prediction step
 
-	if robot.state == 2:
+	if robot.state == 70:
 
 		for i in range(5):
 			sensor = find_landmark(robot, i)
