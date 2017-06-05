@@ -152,25 +152,25 @@ def run_localization(robot):
 			if (len(robot.landmarks) > 0) and sensor[0] > 0:
 				robot.ekf_update(sensor) #call the ekf_update for each landmark
 			landmark_init(robot, sensor) #check for any new landmarks
-			#if sensor[2] == 0:
-			#	robot.state = 2
+			if sensor[2] == 0:
+				robot.state = 2
 
-		#Motors.driveMotors(40,0)
-		#time.sleep(robot.dt)
-		#Motors.driveMotors(0,0)
+		Motors.driveMotors(40,0)
+		time.sleep(robot.dt)
+		Motors.driveMotors(0,0)
 
 		update_motion_model()
 		robot.ekf_predict() #run the prediction step
 
-	if robot.state == 70:
+	if robot.state == 2:
 
 		for i in range(5):
 			sensor = find_landmark(robot, i)
 			landmark_init(robot, sensor) #check for any new landmarks
-			if len(robot.landmarks) > 0:
+			if (len(robot.landmarks) > 0) and sensor[0] > 0:
 				robot.ekf_update(sensor) #call the ekf_update for each landmark
 			if sensor[2] == 4:
-				robot.state = 1
+				robot.state = 3
 
 		Motors.driveMotors(0,40)
 		time.sleep(robot.dt)
@@ -178,6 +178,84 @@ def run_localization(robot):
 
 		update_motion_model()
 		robot.ekf_predict() #run the prediction step
+
+	if robot.state == 3:
+
+		for i in range(5):
+			sensor = find_landmark(robot, i)
+			landmark_init(robot, sensor) #check for any new landmarks
+			if (len(robot.landmarks) > 0) and sensor[0] > 0:
+				robot.ekf_update(sensor) #call the ekf_update for each landmark
+			if sensor[2] == 4:
+				robot.state = 3
+
+		if robot.u[2] > 0.8:
+			Motors.driveMotors(40,0)
+		else if robot.u[2] < 0.6
+			Motors.driveMotors(0,40)
+		else:
+			Motors.driveMotors(0,0)
+			robot.state = 4
+
+		update_motion_model()
+		robot.ekf_predict() #run the prediction step
+
+	if robot.state == 4:
+
+		path = drive_relative(0.8,0.8, robot)
+		if path:
+			robot.state = 5
+			Motors.driveMotors(0,0)
+		#	robot.stored_theta = float(robot.u[2])
+
+		for i in range(5):
+			sensor = find_landmark(robot, i)
+			landmark_init(robot, sensor) #check for any new landmarks
+			if (len(robot.landmarks) > 0) and sensor[0] > 0:
+				robot.ekf_update(sensor) #call the ekf_update for each landmark
+			if sensor[2] == 4:
+				robot.state = 5
+
+		time.sleep(robot.dt)
+		update_motion_model()
+		robot.ekf_predict() #run the prediction step
+
+	if robot.state == 5:
+
+		for i in range(5):
+			sensor = find_landmark(robot, i)
+			if (len(robot.landmarks) > 0) and sensor[0] > 0:
+				robot.ekf_update(sensor) #call the ekf_update for each landmark
+			landmark_init(robot, sensor) #check for any new landmarks
+			if sensor[2] == 0:
+				robot.state = 6
+
+		Motors.driveMotors(40,0)
+		time.sleep(robot.dt)
+		Motors.driveMotors(0,0)
+
+		update_motion_model()
+		robot.ekf_predict() #run the prediction step
+
+	if robot.state == 6:
+
+		for i in range(5):
+			sensor = find_landmark(robot, i)
+			landmark_init(robot, sensor) #check for any new landmarks
+			if (len(robot.landmarks) > 0) and sensor[0] > 0:
+				robot.ekf_update(sensor) #call the ekf_update for each landmark
+			if sensor[2] == 4:
+				robot.state = 5
+
+		Motors.driveMotors(0,40)
+		time.sleep(robot.dt)
+		Motors.driveMotors(0,0)
+
+		update_motion_model()
+		robot.ekf_predict() #run the prediction step
+
+
+
 
 	if robot.state == 100:
 		Motors.driveMotors(0,0);
