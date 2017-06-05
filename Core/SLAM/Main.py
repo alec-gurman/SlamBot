@@ -191,7 +191,7 @@ def run_localization(robot):
 
 		if robot.u[2] > 0.8:
 			Motors.driveMotors(40,0)
-		else if robot.u[2] < 0.6
+		elif robot.u[2] < 0.6:
 			Motors.driveMotors(0,40)
 		else:
 			Motors.driveMotors(0,0)
